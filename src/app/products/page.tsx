@@ -91,36 +91,96 @@ const dummyProducts = [
 	},
 ];
 
+// Define filter options
+const filterOptions = {
+	types: ["Washers", "Dryers", "Stoves/Ranges"],
+	configurations: {
+		Washers: ["Front Load", "Top Load", "Stacked Unit"],
+		Dryers: ["Front Load", "Top Load", "Stacked Unit", "Electric", "Gas"],
+		"Stoves/Ranges": ["Gas", "Electric"],
+	},
+	unitTypes: ["Individual", "Set"],
+	brands: [
+		"Samsung",
+		"LG",
+		"Whirlpool",
+		"GE",
+		"Maytag",
+		"Frigidaire",
+		"KitchenAid",
+		"Bosch",
+		"Electrolux",
+	],
+	priceRanges: [
+		"Under $200",
+		"$200 - $400",
+		"$400 - $600",
+		"$600 - $1000",
+		"$1000 - $1500",
+		"$1500+",
+	],
+};
+
 export default function ProductsPage() {
 	const [filteredProducts, setFilteredProducts] = useState(dummyProducts);
 	const [filters, setFilters] = useState({
-		type: "All Types",
-		configuration: "All Configurations",
-		unitType: "All Units",
-		brand: "All Brands",
-		priceRange: "All Prices",
+		type: "All",
+		configuration: "All",
+		unitType: "All",
+		brand: "All",
+		priceRange: "All",
 	});
 	const [showMobileFilters, setShowMobileFilters] = useState(false);
 
 	const handleFilterChange = (filterType: string, value: string) => {
-		setFilters((prev) => ({ ...prev, [filterType]: value }));
+		const newFilters = { ...filters, [filterType]: value };
+
+		// Reset dependent filters if the main type changes
+		if (filterType === "type") {
+			newFilters.configuration = "All";
+			newFilters.unitType = "All";
+		}
+
+		setFilters(newFilters);
 	};
 
 	const applyFilters = () => {
 		let filtered = dummyProducts;
 
-		// Apply filters (basic implementation)
-		if (filters.type !== "All Types") {
-			filtered = filtered.filter(
-				(product) => product.category === filters.type
+		// Type Filter
+		if (filters.type !== "All") {
+			if (filters.type === "Washers") {
+				filtered = filtered.filter(
+					(p) => p.category === "Washer" || p.category === "Laundry"
+				);
+			} else if (filters.type === "Dryers") {
+				filtered = filtered.filter(
+					(p) => p.category === "Dryer" || p.category === "Laundry"
+				);
+			} else if (filters.type === "Stoves/Ranges") {
+				filtered = filtered.filter((p) => p.category === "Range");
+			}
+		}
+
+		// Configuration Filter
+		if (filters.configuration !== "All") {
+			filtered = filtered.filter((p) =>
+				p.subcategory?.includes(filters.configuration)
 			);
 		}
-		if (filters.brand !== "All Brands") {
+
+		// Unit Type Filter
+		if (filters.unitType !== "All") {
+			const type = filters.unitType === "Individual" ? "Single Unit" : "Set";
+			filtered = filtered.filter((p) => p.type === type);
+		}
+
+		// Brand Filter
+		if (filters.brand !== "All") {
 			filtered = filtered.filter((product) => product.brand === filters.brand);
 		}
-		if (filters.unitType !== "All Units") {
-			filtered = filtered.filter((product) => product.type === filters.unitType);
-		}
+
+		// Note: Price range filter logic would be more complex and is omitted for clarity.
 
 		setFilteredProducts(filtered);
 		setShowMobileFilters(false);
@@ -128,11 +188,11 @@ export default function ProductsPage() {
 
 	const clearFilters = () => {
 		setFilters({
-			type: "All Types",
-			configuration: "All Configurations",
-			unitType: "All Units",
-			brand: "All Brands",
-			priceRange: "All Prices",
+			type: "All",
+			configuration: "All",
+			unitType: "All",
+			brand: "All",
+			priceRange: "All",
 		});
 		setFilteredProducts(dummyProducts);
 		setShowMobileFilters(false);
@@ -191,69 +251,60 @@ export default function ProductsPage() {
 								onChange={(e) => handleFilterChange("type", e.target.value)}
 								className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
 							>
-								<option>All Types</option>
-								<option>Washer</option>
-								<option>Dryer</option>
-								<option>Laundry</option>
-								<option>Refrigerator</option>
-								<option>Range</option>
-								<option>Dishwasher</option>
-								<option>Microwave</option>
+								<option value="All">All Types</option>
+								{filterOptions.types.map((type) => (
+									<option key={type} value={type}>
+										{type}
+									</option>
+								))}
 							</select>
 						</div>
 
-						{/* Configuration Filter */}
-						<div>
-							<label className="block text-sm font-medium text-charcoal mb-2">
-								Configuration
-							</label>
-							<select
-								value={filters.configuration}
-								onChange={(e) =>
-									handleFilterChange("configuration", e.target.value)
-								}
-								className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
-							>
-								<option>All Configurations</option>
-								<optgroup label="Washers">
-									<option>Front Load</option>
-									<option>Top Load</option>
-									<option>Compact/Portable</option>
-								</optgroup>
-								<optgroup label="Dryers">
-									<option>Electric Dryer</option>
-									<option>Gas Dryer</option>
-								</optgroup>
-								<optgroup label="Ranges/Stoves">
-									<option>Gas Range</option>
-									<option>Electric Range</option>
-									<option>Induction</option>
-								</optgroup>
-								<optgroup label="Refrigerators">
-									<option>French Door</option>
-									<option>Side-by-Side</option>
-									<option>Top Freezer</option>
-									<option>Bottom Freezer</option>
-								</optgroup>
-							</select>
-						</div>
+						{/* Configuration Filter (Conditional) */}
+						{filters.type !== "All" && (
+							<div>
+								<label className="block text-sm font-medium text-charcoal mb-2">
+									Configuration
+								</label>
+								<select
+									value={filters.configuration}
+									onChange={(e) =>
+										handleFilterChange("configuration", e.target.value)
+									}
+									className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+								>
+									<option value="All">All Configurations</option>
+									{filterOptions.configurations[
+										filters.type as keyof typeof filterOptions.configurations
+									]?.map((config) => (
+										<option key={config} value={config}>
+											{config}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
 
-						{/* Unit Type Filter */}
-						<div>
-							<label className="block text-sm font-medium text-charcoal mb-2">
-								Unit Type
-							</label>
-							<select
-								value={filters.unitType}
-								onChange={(e) => handleFilterChange("unitType", e.target.value)}
-								className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
-							>
-								<option>All Units</option>
-								<option>Single Unit</option>
-								<option>Set</option>
-								<option>Mixed Set</option>
-							</select>
-						</div>
+						{/* Unit Type Filter (Conditional) */}
+						{(filters.type === "Washers" || filters.type === "Dryers") && (
+							<div>
+								<label className="block text-sm font-medium text-charcoal mb-2">
+									Unit Type
+								</label>
+								<select
+									value={filters.unitType}
+									onChange={(e) => handleFilterChange("unitType", e.target.value)}
+									className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+								>
+									<option value="All">All Units</option>
+									{filterOptions.unitTypes.map((unitType) => (
+										<option key={unitType} value={unitType}>
+											{unitType}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
 
 						{/* Brand Filter */}
 						<div>
@@ -265,16 +316,12 @@ export default function ProductsPage() {
 								onChange={(e) => handleFilterChange("brand", e.target.value)}
 								className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
 							>
-								<option>All Brands</option>
-								<option>Samsung</option>
-								<option>LG</option>
-								<option>Whirlpool</option>
-								<option>GE</option>
-								<option>Maytag</option>
-								<option>Frigidaire</option>
-								<option>KitchenAid</option>
-								<option>Bosch</option>
-								<option>Electrolux</option>
+								<option value="All">All Brands</option>
+								{filterOptions.brands.map((brand) => (
+									<option key={brand} value={brand}>
+										{brand}
+									</option>
+								))}
 							</select>
 						</div>
 
@@ -288,13 +335,12 @@ export default function ProductsPage() {
 								onChange={(e) => handleFilterChange("priceRange", e.target.value)}
 								className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
 							>
-								<option>All Prices</option>
-								<option>Under $200</option>
-								<option>$200 - $400</option>
-								<option>$400 - $600</option>
-								<option>$600 - $1000</option>
-								<option>$1000 - $1500</option>
-								<option>$1500+</option>
+								<option value="All">All Prices</option>
+								{filterOptions.priceRanges.map((price) => (
+									<option key={price} value={price}>
+										{price}
+									</option>
+								))}
 							</select>
 						</div>
 					</div>
