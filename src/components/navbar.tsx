@@ -18,7 +18,7 @@ export default function Navbar() {
                     <div className="flex items-center">
                         <Link href="/" className="flex items-center gap-3 text-2xl sm:text-3xl font-bold text-latte font-mono">
                             <Image
-                                src="/flag.png"
+                                src="../public/file.svg"
                                 alt="ASU Appliances Logo"
                                 width={50}
                                 height={35}
