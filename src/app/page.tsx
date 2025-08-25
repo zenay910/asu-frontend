@@ -4,6 +4,12 @@ import Navbar from "@/components/navbar";
 import About from "@/app/homePage/about";
 import Inventory from "@/app/homePage/inventory";
 import Services from "@/app/homePage/services";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home - ASU Appliances",
+  description: "Reliable appliances, honest service, and local experts you can trust. Browse our quality inventory of washers, dryers, and appliances.",
+};
 
 export default function Home() {
   return (

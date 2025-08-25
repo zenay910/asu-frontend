@@ -120,7 +120,7 @@ export default function ContactPage() {
               <h4 className="font-semibold text-charcoal text-lg mb-4">Follow Us</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <a 
-                  href="https://facebook.com/asuappliances" 
+                  href="https://www.facebook.com/profile.php?id=61551740657314" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#1877F2] hover:text-[#1877F2]/70 px-4 py-3 rounded-lg transition-colors flex items-center gap-3 border border-gray-200 hover:border-[#1877F2]/30 hover:bg-[#1877F2]/5 text-sm sm:text-base"
@@ -129,7 +129,7 @@ export default function ContactPage() {
                   <span className="truncate">ASU Appliances</span>
                 </a>
                 <a 
-                  href="https://instagram.com/asuappliances" 
+                  href="https://www.instagram.com/asuappliances?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#E4405F] hover:text-[#E4405F]/70 px-4 py-3 rounded-lg transition-colors flex items-center gap-3 border border-gray-200 hover:border-[#E4405F]/30 hover:bg-[#E4405F]/5 text-sm sm:text-base"

@@ -5,29 +5,39 @@ import Link from "next/link";
 import supabase from "@/lib/supabaseClient";
 import { toPublicUrl } from "@/lib/storage";
 
+// ---------- Types ----------
 type PhotoRow = {
   path: string;
   role: string | null;
   sort_order: number | null;
 };
+
 type ItemRow = {
   id: string;
   sku: string | null;
-  brand: string | null;
+  brand: { name: string | null } | null; // nested from brands_new
   model_number: string | null;
   condition: string | null;
   price: number | null;
-  category: string | null;
+  status: string | null;
+  type: "Washer" | "Dryer" | "Stove" | "Range" | null;
+  configuration: string | null; // e.g. Front Load, Top Load, Slide-In, etc.
+  unit_type: "Individual" | "Set" | null;
+  fuel: "Electric" | "Gas" | null;
   photos: PhotoRow[] | null;
 };
 
 type ProductCard = {
   id: string;
   name: string;
-  price: string;
+  price: string; // formatted for UI
+  priceNumber: number | null; // raw for filtering
   condition: string;
   brand: string;
-  category: string;
+  category: string; // maps from DB `type`
+  configuration?: string | null;
+  unitType?: string | null;
+  fuel?: string | null;
   image: string | null;
 };
 
@@ -35,10 +45,11 @@ const filterOptions = {
   types: ["Washers", "Dryers", "Stoves/Ranges"],
   configurations: {
     Washers: ["Front Load", "Top Load", "Stacked Unit"],
-    Dryers: ["Front Load", "Top Load", "Stacked Unit", "Electric", "Gas"],
-    "Stoves/Ranges": ["Gas", "Electric"],
+    Dryers: ["Front Load", "Top Load", "Stacked Unit"], // moved Electric/Gas out
+    "Stoves/Ranges": [], // we filter those by fuel only
   },
   unitTypes: ["Individual", "Set"],
+  fuels: ["Electric", "Gas"], // NEW
   brands: [
     "Samsung",
     "LG",
@@ -58,45 +69,58 @@ const filterOptions = {
     "$1000 - $1500",
     "$1500+",
   ],
-};
+} as const;
 
 export default function ProductsPage() {
   const [allProducts, setAllProducts] = useState<ProductCard[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductCard[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState({
     type: "All",
     configuration: "All",
     unitType: "All",
+    fuel: "All", // NEW
     brand: "All",
     priceRange: "All",
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // 1) Fetch Published items with their photos
+  // 1) Fetch Published items_new with their photos (and nested brand)
   useEffect(() => {
     (async () => {
+      setLoading(true);
       const { data, error } = await supabase
-        .from("items")
+        .from("items_new")
         .select(
           `
-          id, sku, brand, model_number, condition, price, category,
-          photos:item_photos ( path, role, sort_order )
+          id,
+          sku,
+          model_number,
+          condition,
+          price,
+          status,
+          type,
+          configuration,
+          unit_type,
+          fuel,
+          brand:brands_new(name),
+          photos:item_photos_new ( path, role, sort_order )
         `
         )
         .eq("status", "Published")
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Failed to load items:", error);
+        console.error("Failed to load items_new:", error);
         setAllProducts([]);
         setFilteredProducts([]);
+        setLoading(false);
         return;
       }
 
-      // Map DB rows -> UI cards
-      const mapped: ProductCard[] = (data as ItemRow[]).map((row) => {
+      const mapped: ProductCard[] = (data || []).map((row: any) => {
         // pick cover photo first; else earliest by sort_order
-        const sorted = (row.photos ?? []).sort((a, b) => {
+        const sorted = (row.photos ?? []).sort((a: any, b: any) => {
           const ac = (a.role ?? "") === "cover" ? -1 : 0;
           const bc = (b.role ?? "") === "cover" ? -1 : 0;
           if (ac !== bc) return ac - bc;
@@ -105,27 +129,34 @@ export default function ProductsPage() {
         const coverPath = sorted[0]?.path ?? null;
         const image = coverPath ? toPublicUrl(coverPath, { width: 800 }) : null;
 
+        const priceNumber = row.price === null ? null : Number(row.price);
+
         return {
           id: row.id,
           name:
-            `${row.brand ?? ""} ${row.model_number ?? ""}`.trim() ||
+            `${row.brand?.name ?? ""} ${row.model_number ?? ""}`.trim() ||
             (row.sku ?? "Item"),
-          price: row.price != null ? `$${row.price}` : "Call",
+          price: priceNumber != null ? `$${priceNumber}` : "Call",
+          priceNumber,
           condition: row.condition ?? "Used",
-          brand: row.brand ?? "—",
-          category: row.category ?? "Other",
+          brand: row.brand?.name ?? "—",
+          category: row.type ?? "Other", // map DB `type` to UI `category`
+          configuration: row.configuration ?? null,
+          unitType: row.unit_type ?? null,
+          fuel: row.fuel ?? null,
           image,
         };
       });
 
       setAllProducts(mapped);
       setFilteredProducts(mapped);
+      setLoading(false);
     })();
   }, []);
 
-  // 2) Your existing filter logic can stay; just use allProducts instead of dummyProducts
+  // 2) Filter handlers
   const handleFilterChange = (filterType: string, value: string) => {
-    const next = { ...filters, [filterType]: value };
+    const next = { ...filters, [filterType]: value } as typeof filters;
     if (filterType === "type") {
       next.configuration = "All";
       next.unitType = "All";
@@ -135,7 +166,8 @@ export default function ProductsPage() {
 
   const applyFilters = () => {
     let filtered = [...allProducts];
-    // Example type filter mapping (adjust as you like)
+
+    // Type
     if (filters.type !== "All") {
       if (filters.type === "Washers")
         filtered = filtered.filter((p) => p.category === "Washer");
@@ -146,8 +178,59 @@ export default function ProductsPage() {
           (p) => p.category === "Stove" || p.category === "Range"
         );
     }
-    if (filters.brand !== "All")
+
+    // Configuration (no Electric/Gas here anymore)
+    if (filters.configuration !== "All" && filters.type !== "All") {
+      filtered = filtered.filter(
+        (p) =>
+          (p.configuration ?? "").toLowerCase() ===
+          filters.configuration.toLowerCase()
+      );
+    }
+
+    // Fuel
+    if (filters.fuel !== "All") {
+      filtered = filtered.filter(
+        (p) => (p.fuel ?? "").toLowerCase() === filters.fuel.toLowerCase()
+      );
+    }
+
+    // Unit Type
+    if (filters.unitType !== "All") {
+      filtered = filtered.filter(
+        (p) =>
+          (p.unitType ?? "").toLowerCase() === filters.unitType.toLowerCase()
+      );
+    }
+
+    // Brand
+    if (filters.brand !== "All") {
       filtered = filtered.filter((p) => p.brand === filters.brand);
+    }
+
+    // Price Range
+    if (filters.priceRange !== "All") {
+      filtered = filtered.filter((p) => {
+        const price = p.priceNumber;
+        if (price == null) return false;
+        switch (filters.priceRange) {
+          case "Under $200":
+            return price < 200;
+          case "$200 - $400":
+            return price >= 200 && price <= 400;
+          case "$400 - $600":
+            return price > 400 && price <= 600;
+          case "$600 - $1000":
+            return price > 600 && price <= 1000;
+          case "$1000 - $1500":
+            return price > 1000 && price <= 1500;
+          case "$1500+":
+            return price > 1500;
+          default:
+            return true;
+        }
+      });
+    }
 
     setFilteredProducts(filtered);
     setShowMobileFilters(false);
@@ -158,6 +241,7 @@ export default function ProductsPage() {
       type: "All",
       configuration: "All",
       unitType: "All",
+      fuel: "All", // NEW
       brand: "All",
       priceRange: "All",
     });
@@ -292,6 +376,28 @@ export default function ProductsPage() {
               </select>
             </div>
 
+            {/* Fuel Filter (Dryers & Stoves/Ranges) */}
+            {(filters.type === "Dryers" ||
+              filters.type === "Stoves/Ranges") && (
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-2">
+                  Fuel
+                </label>
+                <select
+                  value={filters.fuel}
+                  onChange={(e) => handleFilterChange("fuel", e.target.value)}
+                  className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                >
+                  <option value="All">All Fuel Types</option>
+                  {filterOptions.fuels.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Price Range Filter */}
             <div>
               <label className="block text-sm font-medium text-charcoal mb-2">
@@ -334,24 +440,40 @@ export default function ProductsPage() {
         {/* Results Count */}
         <div className="mb-4">
           <p className="text-charcoal text-sm sm:text-base">
-            Showing {filteredProducts.length} of {allProducts.length} products
+            {loading ? (
+              "Loading products…"
+            ) : (
+              <>
+                Showing {filteredProducts.length} of {allProducts.length}{" "}
+                products
+              </>
+            )}
           </p>
         </div>
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {filteredProducts.map((p) => (
+          {(!loading
+            ? filteredProducts
+            : (Array.from({ length: 8 }).map((_, i) => ({
+                id: `skeleton-${i}`,
+              })) as any)
+          ).map((p: ProductCard & { id: string }) => (
             <Link
               key={p.id}
-              href={`/products/${p.id}`}
+              href={
+                typeof p === "object" && "name" in p ? `/products/${p.id}` : "#"
+              }
               className="bg-white rounded-xs shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer transform hover:-translate-y-1"
             >
               <div className="relative w-full h-64 sm:h-80 bg-silver flex items-center justify-center overflow-hidden">
-                {p.image ? (
+                {loading ? (
+                  <div className="animate-pulse w-full h-full bg-gray-200" />
+                ) : p.image ? (
                   // If you use next/image, add your Supabase domain to next.config.js images.domains
                   // Otherwise <img> is fine too:
                   <img
-                    src={p.image}
+                    src={p.image as string}
                     alt={p.name}
                     className="w-full h-full object-cover"
                   />
@@ -359,33 +481,35 @@ export default function ProductsPage() {
                   <span className="text-charcoal text-sm">No image</span>
                 )}
 
-                <div className="absolute inset-0 bg-charcoal/90 p-4 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                  <div className="text-white">
-                    <h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-2">
-                      {p.name}
-                    </h3>
-                    <div className="space-y-1 mb-3 text-xs sm:text-sm">
-                      <p>Brand: {p.brand}</p>
-                      <p>Category: {p.category}</p>
-                      <p>Condition: {p.condition}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg sm:text-xl font-bold">
-                        {p.price}
-                      </span>
-                      <span className="bg-white text-charcoal px-3 py-1 rounded-xs text-xs sm:text-sm hover:bg-gray-100 transition-colors">
-                        View Details
-                      </span>
+                {!loading && (
+                  <div className="absolute inset-0 bg-charcoal/90 p-4 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
+                    <div className="text-white">
+                      <h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-2">
+                        {p.name}
+                      </h3>
+                      <div className="space-y-1 mb-3 text-xs sm:text-sm">
+                        <p>Brand: {p.brand}</p>
+                        <p>Category: {p.category}</p>
+                        <p>Condition: {p.condition}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg sm:text-xl font-bold">
+                          {p.price}
+                        </span>
+                        <span className="bg-white text-charcoal px-3 py-1 rounded-xs text-xs sm:text-sm hover:bg-gray-100 transition-colors">
+                          View Details
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </Link>
           ))}
         </div>
 
         {/* No Results Message */}
-        {filteredProducts.length === 0 && (
+        {!loading && filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-charcoal text-lg mb-4">
               No products found matching your criteria.
@@ -399,8 +523,8 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* Load More Button */}
-        {filteredProducts.length > 0 && (
+        {/* Load More Button (placeholder for future pagination) */}
+        {!loading && filteredProducts.length > 0 && (
           <div className="text-center mt-8">
             <button className="bg-charcoal text-latte px-6 py-3 rounded-xs hover:bg-charcoal/80 transition-colors">
               Load More Products
