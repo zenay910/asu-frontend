@@ -57,10 +57,10 @@ async function fetchProduct(id: string) {
   return { ...data, gallery };
 }
 
-interface ProductPageProps { params: { id: string } }
-
-export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const product = await fetchProduct(params.id);
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // Next.js 15 PageProps expects params to be a Promise; await it for strong typing.
+  const { id } = await params;
+  const product = await fetchProduct(id);
   if (!product) {
     return (
       <div className="min-h-screen bg-latte">
