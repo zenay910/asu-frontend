@@ -85,33 +85,33 @@ export default function ProductsPage() {
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // 1) Fetch Published items_new with their photos (and nested brand)
+  // 1) Fetch Published items with their photos
   useEffect(() => {
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("items_new")
+        .from("items")
         .select(
           `
-          id,
           sku,
+          title,
+          brand,
+          price,
           model_number,
           condition,
-          price,
           status,
           type,
           configuration,
           unit_type,
           fuel,
-          brand:brands_new(name),
-          photos:item_photos_new ( path, role, sort_order )
+          photos:item_photos ( path, role, sort_order )
         `
         )
         .eq("status", "Published")
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Failed to load items_new:", error);
+  console.error("Failed to load items:", error);
         setAllProducts([]);
         setFilteredProducts([]);
         setLoading(false);
@@ -127,20 +127,18 @@ export default function ProductsPage() {
           return (a.sort_order ?? 9999) - (b.sort_order ?? 9999);
         });
         const coverPath = sorted[0]?.path ?? null;
-        const image = coverPath ? toPublicUrl(coverPath, { width: 800 }) : null;
+  const image = coverPath ? toPublicUrl(coverPath, { width: 800, quality: 70, format: 'webp' }) : null;
 
         const priceNumber = row.price === null ? null : Number(row.price);
 
         return {
-          id: row.id,
-          name:
-            `${row.brand?.name ?? ""} ${row.model_number ?? ""}`.trim() ||
-            (row.sku ?? "Item"),
+          id: row.sku, // use SKU as identifier now
+          name: row.title || `${row.brand ? row.brand + ' ' : ''}${row.model_number || row.sku || 'Item'}`.trim(),
           price: priceNumber != null ? `$${priceNumber}` : "Call",
-          priceNumber,
-          condition: row.condition ?? "Used",
-          brand: row.brand?.name ?? "—",
-          category: row.type ?? "Other", // map DB `type` to UI `category`
+            priceNumber,
+          condition: row.condition ?? "Good",
+          brand: row.brand ?? "—",
+          category: row.type ?? "Other",
           configuration: row.configuration ?? null,
           unitType: row.unit_type ?? null,
           fuel: row.fuel ?? null,
@@ -461,9 +459,7 @@ export default function ProductsPage() {
           ).map((p: ProductCard & { id: string }) => (
             <Link
               key={p.id}
-              href={
-                typeof p === "object" && "name" in p ? `/products/${p.id}` : "#"
-              }
+              href={typeof p === "object" ? `/products/${p.id}` : "#"}
               className="bg-white rounded-xs shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer transform hover:-translate-y-1"
             >
               <div className="relative w-full h-64 sm:h-80 bg-silver flex items-center justify-center overflow-hidden">

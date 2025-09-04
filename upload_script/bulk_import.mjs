@@ -1,32 +1,44 @@
 // bulk_import.mjs  (Node 18+ / ESM)
 // ----------------------------------
+// Unified importer for the new `items` + `item_photos` schema
+//
 // Setup:
 //   npm i @supabase/supabase-js csv-parse dotenv
-// .env:
+// .env (service context ONLY – never ship to client):
 //   SUPABASE_URL=https://YOURPROJECT.supabase.co
 //   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...   (NEVER commit this)
 //   BUCKET=appliances
 //
 // Usage:
-//   node bulk_import.mjs /path/to/Items.csv /path/to/photos
+//   node bulk_import.mjs /path/to/items.csv /path/to/photos
 //
-// CSV headers (exact):
-//   sku,brand,model_number,type,configuration,unit_type,fuel,condition,price,status,notes
-//   W-250824-001,LG,WM4000HWA,Washer,Front Load,Individual,,Refurbished,349,Published,"minor scratch"
+// items.csv expected headers (case‑sensitive):
+//   sku,title,brand,price,model_number,type,configuration,dimensions,capacity,fuel,unit_type,color,features,condition,status,description_long
+// Required: sku, title (others optional). Unknown columns are ignored.
+//   dimensions should be JSON: {"width":27,"height":38,"depth":31}
+//   features can be JSON array OR delimited list (comma / pipe / semicolon)
 //
-// Photos folder layout:
+// Photos folder layout (matched by sku):
 //   photos/
-//     W-250824-001/
-//       1.jpg
-//       2.jpg
-//       cover.jpg
+//     <SKU>/
+//       1.jpg | cover.jpg | any*.png/webp
 //
-// Notes:
-// - Upserts into brands_new(name) and sets items_new.brand_id
-// - Upserts into items_new by sku
-// - Uploads photos to:  <bucket>/<item_id>/original/001.jpg (etc.)
-// - Stores DB path WITHOUT bucket, e.g.:  <item_id>/original/001.jpg
-// - First sorted photo becomes role='cover', rest 'gallery'
+// Behavior:
+//   - Upserts into items (primary key: sku).
+//   - Uploads photos to: <bucket>/<sku>/original/001.jpg etc.
+//   - Records each photo in item_photos with item_sku=<sku>.
+//   - First sorted image (prefers filenames starting with 1 / containing 'cover') marked role='cover'.
+//
+// SQL reference (run separately if table lost):
+//   create table if not exists item_photos (
+//     id uuid primary key default gen_random_uuid(),
+//     item_sku text references items(sku) on delete cascade,
+//     path text not null,
+//     role text check (role in ('cover','gallery')) default 'gallery',
+//     sort_order int,
+//     created_at timestamptz default now()
+//   );
+//   create index if not exists item_photos_item_sku_idx on item_photos(item_sku);
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
@@ -40,7 +52,7 @@ const __dirname  = path.dirname(__filename);
 
 const [,, csvPathArg, photosRootArg] = process.argv;
 if (!csvPathArg || !photosRootArg) {
-  console.error('Usage: node bulk_import.mjs <Items.csv> <photosRoot>');
+  console.error('Usage: node bulk_import.mjs <items.csv> <photosRoot>');
   process.exit(1);
 }
 
@@ -57,8 +69,10 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
   global: { headers: { Authorization: `Bearer ${SERVICE_ROLE}` } },
 });
 
-const csvPath    = path.resolve(process.cwd(), csvPathArg);
-const photosRoot = path.resolve(process.cwd(), photosRootArg);
+const csvPath       = path.resolve(process.cwd(), csvPathArg);
+const photosRoot    = path.resolve(process.cwd(), photosRootArg);
+// No secondary public CSV – unified now.
+
 
 // ---------- helpers ----------
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -70,10 +84,10 @@ const ALLOWED = {
   type: new Set(['Washer','Dryer','Stove','Range']),
   configuration: new Set([
     'Front Load','Top Load','Stacked Unit','Standard','Slide-In','Cooktop'
-  ]), // keep/edit to your vocabulary; it is text in DB, but we validate to catch typos
+  ]),
   unit_type: new Set(['Individual','Set']),
-  fuel: new Set(['Electric','Gas','']), // allow blank as empty
-  condition: new Set(['New','Refurbished','Used','For Parts']),
+  fuel: new Set(['Electric','Gas','']),
+  condition: new Set(['New','Good','Fair','Poor']), // per new schema constraint
   status: new Set(['Draft','Published','Archived']),
 };
 
@@ -101,27 +115,15 @@ function guessType(name) {
   return CONTENT_TYPES[ext] || 'application/octet-stream';
 }
 
-async function upsertBrandGetId(name) {
-  if (!name) return null;
-  const clean = name.trim();
+async function photoRowExists(sku, objectPath) {
   const { data, error } = await supabase
-    .from('brands_new')
-    .upsert({ name: clean }, { onConflict: 'name' })
+    .from('item_photos')
     .select('id')
-    .single();
-  if (error) throw error;
-  return data.id;
-}
-
-async function photoRowExists(itemId, objectPath) {
-  const { data, error } = await supabase
-    .from('item_photos_new')
-    .select('id')
-    .eq('item_id', itemId)
+    .eq('item_sku', sku)
     .eq('path', objectPath)
     .limit(1);
   if (error) {
-    console.error('Check existing photo failed:', itemId, objectPath, error);
+    console.error('Check existing photo failed:', sku, objectPath, error);
     return false;
   }
   return Array.isArray(data) && data.length > 0;
@@ -136,12 +138,14 @@ async function main() {
   const csvRaw = fs.readFileSync(csvPath, 'utf-8');
   const rows   = parse(csvRaw, { columns: true, skip_empty_lines: true });
 
+  // No separate public details map – unified CSV.
+
   if (!fs.existsSync(photosRoot) || !fs.statSync(photosRoot).isDirectory()) {
     console.error('Photos root not found or not a directory:', photosRoot);
     process.exit(1);
   }
 
-  console.log(`Importing ${rows.length} rows from ${csvPath}`);
+  console.log(`Importing ${rows.length} item rows from ${csvPath}`);
   console.log(`Photos root: ${photosRoot}`);
   console.log(`Bucket: ${BUCKET}`);
 
@@ -150,20 +154,36 @@ async function main() {
       const r = rows[idx];
 
       const sku           = norm(r.sku);
-      const brandName     = norm(r.brand);
+      const title         = norm(r.title);
+      const brand         = norm(r.brand);
       const model_number  = norm(r.model_number);
       const type          = validateEnum('type', norm(r.type));
-      const configuration = norm(r.configuration); // validate optionally below depending on type
+      const configuration = norm(r.configuration);
       const unit_type     = validateEnum('unit_type', norm(r.unit_type));
       const fuelVal       = norm(r.fuel);
       const fuel          = fuelVal ? validateEnum('fuel', fuelVal) : null;
       const condition     = validateEnum('condition', norm(r.condition));
-      const price         = cleanMoney(r.price);
       const status        = validateEnum('status', norm(r.status) || 'Draft');
-      const notes         = norm(r.notes);
+      const price         = cleanMoney(r.price);
+      const color         = norm(r.color);
+      const capacity      = r.capacity ? Number(String(r.capacity).replace(/[^0-9.]/g,'')) : null;
+      const description_long = norm(r.description_long);
+      let dimensions = null;
+      if (r.dimensions) {
+        try { if (r.dimensions.trim()) dimensions = JSON.parse(r.dimensions); } catch (e) { console.warn(`Bad dimensions JSON for ${sku}: ${e.message}`); }
+      }
+      let features = null;
+      if (r.features) {
+        if (/^[\[{]/.test(r.features.trim())) {
+          try { const parsed = JSON.parse(r.features); if (Array.isArray(parsed)) features = parsed.map(f=>norm(f)).filter(Boolean); } catch {}
+        } else {
+          features = String(r.features).split(/[|;,]/).map(s=>norm(s)).filter(Boolean);
+        }
+        if (features && !features.length) features = null;
+      }
 
-      if (!sku || !type) {
-        console.error(`Row ${idx+1}: missing sku or type. Skipping.`);
+      if (!sku || !title) {
+        console.error(`Row ${idx+1}: missing sku or title. Skipping.`);
         continue;
       }
 
@@ -174,87 +194,84 @@ async function main() {
         validateEnum('configuration', configuration);
       }
 
-      // Brand upsert/lookup
-      const brand_id = await upsertBrandGetId(brandName || '');
-
-      // Upsert item into items_new by sku
       const upsertPayload = {
         sku,
-        brand_id,
-        model_number,
-        type,                // enum in DB
-        configuration,
-        unit_type: unit_type || 'Individual',
-        fuel,                // enum or null
-        condition: condition || 'Used',
+        title,
+        brand,
         price,
+        model_number,
+        type,
+        configuration,
+        dimensions: dimensions || null,
+        capacity: capacity || null,
+        fuel,
+        unit_type: unit_type || 'Individual',
+        color,
+        features: features || null,
+        condition: condition || 'Good',
         status,
-        notes,
+        description_long,
+        updated_at: new Date().toISOString(),
       };
 
-      const { data: upserted, error: upErr } = await supabase
-        .from('items_new')
-        .upsert(upsertPayload, { onConflict: 'sku' })
-        .select('id')
-        .single();
-
+      const { error: upErr } = await supabase
+        .from('items')
+        .upsert(upsertPayload, { onConflict: 'sku' });
       if (upErr) {
         console.error('Upsert failed for', sku, upErr);
         continue;
       }
-      const itemId = upserted.id;
 
       // Photos for this SKU (optional)
-      const dir = path.join(photosRoot, sku);
+  const dir = path.join(photosRoot, sku);
+      let files = [];
       if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         console.warn(`No photo folder for ${sku} at ${dir}. Skipping photos.`);
-        continue;
-      }
+      } else {
+        files = fs.readdirSync(dir).filter(f => !f.startsWith('.'));
+        files = files.filter(f => /\.(jpe?g|png|webp)$/i.test(f));
+        if (files.length === 0) {
+          console.warn(`No image files for ${sku} in ${dir}.`);
+        } else {
+          files = sortFilesSmart(files);
+          for (let i = 0; i < files.length; i++) {
+            const filename    = files[i];
+            const ext         = filename.split('.').pop().toLowerCase();
+            const contentType = guessType(filename);
+            const storageName = String(i+1).padStart(3,'0') + '.' + ext;
+            const objectPath  = `${sku}/original/${storageName}`;
+            const body        = fs.readFileSync(path.join(dir, filename));
 
-      let files = fs.readdirSync(dir).filter(f => !f.startsWith('.'));
-      files = files.filter(f => /\.(jpe?g|png|webp)$/i.test(f));
-      if (files.length === 0) {
-        console.warn(`No image files for ${sku} in ${dir}.`);
-        continue;
-      }
-      files = sortFilesSmart(files);
+            // Cheap existence check
+            const list = await supabase.storage.from(BUCKET).list(`${sku}/original`, { search: storageName });
+            const alreadyUploaded = Array.isArray(list.data) && list.data.some(f => f.name === storageName);
 
-      for (let i = 0; i < files.length; i++) {
-        const filename    = files[i];
-        const ext         = filename.split('.').pop().toLowerCase();
-        const contentType = guessType(filename);
-        const storageName = String(i+1).padStart(3,'0') + '.' + ext;
-        const objectPath  = `${itemId}/original/${storageName}`;
-        const body        = fs.readFileSync(path.join(dir, filename));
+            if (!alreadyUploaded) {
+              console.log(`Uploading ${sku} -> ${objectPath}`);
+              const { error: upErr2 } = await supabase.storage
+                .from(BUCKET)
+                .upload(objectPath, body, { cacheControl: '3600', upsert: true, contentType });
+              if (upErr2) {
+                console.error('UPLOAD ERR', sku, objectPath, upErr2);
+                continue;
+              }
+              await sleep(40);
+            }
 
-        // Cheap existence check
-        const list = await supabase.storage.from(BUCKET).list(`${itemId}/original`, { search: storageName });
-        const alreadyUploaded = Array.isArray(list.data) && list.data.some(f => f.name === storageName);
-
-        if (!alreadyUploaded) {
-          console.log(`Uploading ${sku} -> ${objectPath}`);
-          const { error: upErr2 } = await supabase.storage
-            .from(BUCKET)
-            .upload(objectPath, body, { cacheControl: '3600', upsert: true, contentType });
-          if (upErr2) {
-            console.error('UPLOAD ERR', sku, objectPath, upErr2);
-            continue;
+            // Insert item_photos_new row if missing
+      const exists = await photoRowExists(sku, objectPath);
+            if (!exists) {
+              const role = i === 0 ? 'cover' : 'gallery';
+              const { error: insErr } = await supabase
+        .from('item_photos')
+        .insert({ item_sku: sku, path: objectPath, role, sort_order: i+1 });
+              if (insErr) console.error('DB insert photo failed', sku, objectPath, insErr);
+            }
           }
-          await sleep(40);
-        }
-
-        // Insert item_photos_new row if missing
-        const exists = await photoRowExists(itemId, objectPath);
-        if (!exists) {
-          const role = i === 0 ? 'cover' : 'gallery';
-          const { error: insErr } = await supabase
-            .from('item_photos_new')
-            .insert({ item_id: itemId, path: objectPath, role, sort_order: i+1 });
-          if (insErr) console.error('DB insert photo failed', sku, objectPath, insErr);
         }
       }
 
-      console.log(`✓ Imported ${sku} (${files.length} photos)`);
+    console.log(`✓ Imported ${sku} (${files.length} photos)`);
     } catch (e) {
       console.error(`Row ${idx+1} error:`, e.message);
     }
