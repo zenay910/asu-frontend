@@ -84,7 +84,7 @@ export default async function ProductDetailBySkuPage({ params }: { params: Promi
               {product.fuel && <><dt className="font-medium text-charcoal">Fuel</dt><dd className="text-charcoal/80">{product.fuel}</dd></>}
               {product.model_number && <><dt className="font-medium text-charcoal">Model Number</dt><dd className="text-charcoal/80">{product.model_number}</dd></>}
               {product.color && <><dt className="font-medium text-charcoal">Color</dt><dd className="text-charcoal/80">{product.color}</dd></>}
-              {product.capacity && <><dt className="font-medium text-charcoal">Capacity (Cu. Ft.)</dt><dd className="text-charcoal/80">{product.capacity}</dd></>}
+              {product.capacity && <><dt className="font-medium text-charcoal">Capacity (in Cu. Ft.)</dt><dd className="text-charcoal/80">{product.capacity}</dd></>}
             </dl>
             {product.description_long && (
               <div className="prose prose-sm max-w-none mb-8">
