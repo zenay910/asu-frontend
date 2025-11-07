@@ -6,25 +6,27 @@ import supabase from "@/lib/supabaseClient";
 import { toPublicUrl } from "@/lib/storage";
 
 // ---------- Types ----------
-type PhotoRow = {
-  path: string;
-  role: string | null;
-  sort_order: number | null;
+type ProductImage = {
+  id: string;
+  photo_url: string;
+  product_id: string;
 };
 
-type ItemRow = {
+type Product = {
   id: string;
-  sku: string | null;
-  brand: { name: string | null } | null; // nested from brands_new
-  model_number: string | null;
+  title: string;
+  brand: string;
+  price: number;
+  model_number: string;
+  type: string | null;
+  configuration: string | null;
+  unit_type: string | null;
+  fuel: string | null;
+  color: string | null;
   condition: string | null;
-  price: number | null;
   status: string | null;
-  type: "Washer" | "Dryer" | "Stove" | "Range" | null;
-  configuration: string | null; // e.g. Front Load, Top Load, Slide-In, etc.
-  unit_type: "Individual" | "Set" | null;
-  fuel: "Electric" | "Gas" | null;
-  photos: PhotoRow[] | null;
+  description_long: string | null;
+  product_images: ProductImage[];
 };
 
 type ProductCard = {
@@ -34,7 +36,7 @@ type ProductCard = {
   priceNumber: number | null; // raw for filtering
   condition: string;
   brand: string;
-  category: string; // maps from DB `type`
+  type: string; // maps from DB `type`
   configuration?: string | null;
   unitType?: string | null;
   fuel?: string | null;
@@ -89,11 +91,12 @@ export default function ProductsPage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      console.log("Fetching products from Supabase...");
       const { data, error } = await supabase
-        .from("items")
+        .from("products")
         .select(
           `
-          sku,
+          id,
           title,
           brand,
           price,
@@ -104,41 +107,45 @@ export default function ProductsPage() {
           configuration,
           unit_type,
           fuel,
-          photos:item_photos ( path, role, sort_order )
+          color,
+          product_images (
+            id,
+            photo_url,
+            product_id
+          )
         `
         )
         .eq("status", "Published")
         .order("created_at", { ascending: false });
 
       if (error) {
-  console.error("Failed to load items:", error);
+        console.error("Failed to load products:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
         setAllProducts([]);
         setFilteredProducts([]);
         setLoading(false);
         return;
       }
 
+      console.log("Fetched data:", data);
+      console.log("Number of products:", data?.length || 0);
+
       const mapped: ProductCard[] = (data || []).map((row: any) => {
-        // pick cover photo first; else earliest by sort_order
-        const sorted = (row.photos ?? []).sort((a: any, b: any) => {
-          const ac = (a.role ?? "") === "cover" ? -1 : 0;
-          const bc = (b.role ?? "") === "cover" ? -1 : 0;
-          if (ac !== bc) return ac - bc;
-          return (a.sort_order ?? 9999) - (b.sort_order ?? 9999);
-        });
-        const coverPath = sorted[0]?.path ?? null;
-  const image = coverPath ? toPublicUrl(coverPath, { width: 800, quality: 70, format: 'webp' }) : null;
+        // Get the first image from product_images array
+        const images = row.product_images || [];
+        const firstImage = images[0];
+        const image = firstImage?.photo_url || null;
 
         const priceNumber = row.price === null ? null : Number(row.price);
 
         return {
-          id: row.sku, // use SKU as identifier now
-          name: row.title || `${row.brand ? row.brand + ' ' : ''}${row.model_number || row.sku || 'Item'}`.trim(),
+          id: row.id,
+          name: row.title || `${row.brand ? row.brand + ' ' : ''}${row.model_number || 'Item'}`.trim(),
           price: priceNumber != null ? `$${priceNumber}` : "Call",
-            priceNumber,
+          priceNumber,
           condition: row.condition ?? "Good",
           brand: row.brand ?? "—",
-          category: row.type ?? "Other",
+          type: row.type ?? "Other",
           configuration: row.configuration ?? null,
           unitType: row.unit_type ?? null,
           fuel: row.fuel ?? null,
@@ -168,12 +175,12 @@ export default function ProductsPage() {
     // Type
     if (filters.type !== "All") {
       if (filters.type === "Washers")
-        filtered = filtered.filter((p) => p.category === "Washer");
+        filtered = filtered.filter((p) => p.type === "Washer");
       else if (filters.type === "Dryers")
-        filtered = filtered.filter((p) => p.category === "Dryer");
+        filtered = filtered.filter((p) => p.type === "Dryer");
       else if (filters.type === "Stoves/Ranges")
         filtered = filtered.filter(
-          (p) => p.category === "Stove" || p.category === "Range"
+          (p) => p.type === "Stove" || p.type === "Range"
         );
     }
 
@@ -485,7 +492,7 @@ export default function ProductsPage() {
                       </h3>
                       <div className="space-y-1 mb-3 text-xs sm:text-sm">
                         <p>Brand: {p.brand}</p>
-                        <p>Category: {p.category}</p>
+                        <p>Type: {p.type}</p>
                         <p>Condition: {p.condition}</p>
                       </div>
                       <div className="flex items-center justify-between">

@@ -13,32 +13,33 @@
 //   node bulk_import.mjs /path/to/items.csv /path/to/photos
 //
 // items.csv expected headers (case‑sensitive):
-//   sku,title,brand,price,model_number,type,configuration,dimensions,capacity,fuel,unit_type,color,features,condition,status,description_long
-// Required: sku, title (others optional). Unknown columns are ignored.
+//   title,brand,price,model_number,category,configuration,dimensions,capacity,fuel,unit_type,color,features,condition,status,description_long
+// Required: title (others optional). Unknown columns are ignored.
 //   dimensions should be JSON: {"width":27,"height":38,"depth":31}
 //   features can be JSON array OR delimited list (comma / pipe / semicolon)
 //
-// Photos folder layout (matched by sku):
+// Photos folder layout (matched by title or id):
 //   photos/
-//     <SKU>/
+//     <TITLE>/
 //       1.jpg | cover.jpg | any*.png/webp
+// NOTE: Image upload is currently disabled/commented out
 //
 // Behavior:
-//   - Upserts into items (primary key: sku).
-//   - Uploads photos to: <bucket>/<sku>/original/001.jpg etc.
-//   - Records each photo in item_photos with item_sku=<sku>.
+//   - Upserts into items (by sku; id is UUID).
+//   - Uploads photos to: <bucket>/<item_id>/original/001.jpg etc.
+//   - Records each photo in item_photos with item_id=<UUID>.
 //   - First sorted image (prefers filenames starting with 1 / containing 'cover') marked role='cover'.
 //
 // SQL reference (run separately if table lost):
 //   create table if not exists item_photos (
 //     id uuid primary key default gen_random_uuid(),
-//     item_sku text references items(sku) on delete cascade,
+//     item_id uuid references items(id) on delete cascade,
 //     path text not null,
 //     role text check (role in ('cover','gallery')) default 'gallery',
 //     sort_order int,
 //     created_at timestamptz default now()
 //   );
-//   create index if not exists item_photos_item_sku_idx on item_photos(item_sku);
+//   create index if not exists item_photos_item_id_idx on item_photos(item_id);
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
@@ -81,7 +82,7 @@ const norm = (v) => (v ?? '').toString().trim() || null;
 const cleanMoney = (v) => (v === null || v === undefined || v === '' ? null : Number(String(v).replace(/[^0-9.]/g, '')));
 
 const ALLOWED = {
-  type: new Set(['Washer','Dryer','Stove','Range']),
+  category: new Set(['Washer','Dryer','Stove']),
   configuration: new Set([
     'Front Load','Top Load','Stacked Unit','Standard','Slide-In','Cooktop'
   ]),
@@ -115,15 +116,15 @@ function guessType(name) {
   return CONTENT_TYPES[ext] || 'application/octet-stream';
 }
 
-async function photoRowExists(sku, objectPath) {
+async function photoRowExists(itemId, objectPath) {
   const { data, error } = await supabase
     .from('item_photos')
     .select('id')
-    .eq('item_sku', sku)
+    .eq('item_id', itemId)
     .eq('path', objectPath)
     .limit(1);
   if (error) {
-    console.error('Check existing photo failed:', sku, objectPath, error);
+    console.error('Check existing photo failed:', itemId, objectPath, error);
     return false;
   }
   return Array.isArray(data) && data.length > 0;
@@ -153,11 +154,10 @@ async function main() {
     try {
       const r = rows[idx];
 
-      const sku           = norm(r.sku);
       const title         = norm(r.title);
       const brand         = norm(r.brand);
       const model_number  = norm(r.model_number);
-      const type          = validateEnum('type', norm(r.type));
+      const category      = validateEnum('category', norm(r.category));
       const configuration = norm(r.configuration);
       const unit_type     = validateEnum('unit_type', norm(r.unit_type));
       const fuelVal       = norm(r.fuel);
@@ -170,7 +170,7 @@ async function main() {
       const description_long = norm(r.description_long);
       let dimensions = null;
       if (r.dimensions) {
-        try { if (r.dimensions.trim()) dimensions = JSON.parse(r.dimensions); } catch (e) { console.warn(`Bad dimensions JSON for ${sku}: ${e.message}`); }
+        try { if (r.dimensions.trim()) dimensions = JSON.parse(r.dimensions); } catch (e) { console.warn(`Bad dimensions JSON for ${title}: ${e.message}`); }
       }
       let features = null;
       if (r.features) {
@@ -182,8 +182,8 @@ async function main() {
         if (features && !features.length) features = null;
       }
 
-      if (!sku || !title) {
-        console.error(`Row ${idx+1}: missing sku or title. Skipping.`);
+      if (!title) {
+        console.error(`Row ${idx+1}: missing title. Skipping.`);
         continue;
       }
 
@@ -195,12 +195,11 @@ async function main() {
       }
 
       const upsertPayload = {
-        sku,
         title,
         brand,
         price,
         model_number,
-        type,
+        category,
         configuration,
         dimensions: dimensions || null,
         capacity: capacity || null,
@@ -214,24 +213,32 @@ async function main() {
         updated_at: new Date().toISOString(),
       };
 
-      const { error: upErr } = await supabase
+      const { data: upsertedItem, error: upErr } = await supabase
         .from('items')
-        .upsert(upsertPayload, { onConflict: 'sku' });
+        .insert(upsertPayload)
+        .select('id')
+        .single();
       if (upErr) {
-        console.error('Upsert failed for', sku, upErr);
+        console.error('Insert failed for', title, upErr);
         continue;
       }
+      
+      const itemId = upsertedItem.id;
 
-      // Photos for this SKU (optional)
-  const dir = path.join(photosRoot, sku);
+      // ========== IMAGE UPLOAD SECTION COMMENTED OUT ==========
+      // TODO: Determine new image organization strategy now that SKU is removed
+      // Options: Use item ID, title, or another unique identifier
+      /*
+      // Photos for this item (optional)
+      const dir = path.join(photosRoot, title); // or use itemId?
       let files = [];
       if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
-        console.warn(`No photo folder for ${sku} at ${dir}. Skipping photos.`);
+        console.warn(`No photo folder for ${title} at ${dir}. Skipping photos.`);
       } else {
         files = fs.readdirSync(dir).filter(f => !f.startsWith('.'));
         files = files.filter(f => /\.(jpe?g|png|webp)$/i.test(f));
         if (files.length === 0) {
-          console.warn(`No image files for ${sku} in ${dir}.`);
+          console.warn(`No image files for ${title} in ${dir}.`);
         } else {
           files = sortFilesSmart(files);
           for (let i = 0; i < files.length; i++) {
@@ -239,39 +246,40 @@ async function main() {
             const ext         = filename.split('.').pop().toLowerCase();
             const contentType = guessType(filename);
             const storageName = String(i+1).padStart(3,'0') + '.' + ext;
-            const objectPath  = `${sku}/original/${storageName}`;
+            const objectPath  = `${itemId}/original/${storageName}`;
             const body        = fs.readFileSync(path.join(dir, filename));
 
             // Cheap existence check
-            const list = await supabase.storage.from(BUCKET).list(`${sku}/original`, { search: storageName });
+            const list = await supabase.storage.from(BUCKET).list(`${itemId}/original`, { search: storageName });
             const alreadyUploaded = Array.isArray(list.data) && list.data.some(f => f.name === storageName);
 
             if (!alreadyUploaded) {
-              console.log(`Uploading ${sku} -> ${objectPath}`);
+              console.log(`Uploading ${title} -> ${objectPath}`);
               const { error: upErr2 } = await supabase.storage
                 .from(BUCKET)
                 .upload(objectPath, body, { cacheControl: '3600', upsert: true, contentType });
               if (upErr2) {
-                console.error('UPLOAD ERR', sku, objectPath, upErr2);
+                console.error('UPLOAD ERR', title, objectPath, upErr2);
                 continue;
               }
               await sleep(40);
             }
 
-            // Insert item_photos_new row if missing
-      const exists = await photoRowExists(sku, objectPath);
+            // Insert item_photos row if missing
+            const exists = await photoRowExists(itemId, objectPath);
             if (!exists) {
               const role = i === 0 ? 'cover' : 'gallery';
               const { error: insErr } = await supabase
-        .from('item_photos')
-        .insert({ item_sku: sku, path: objectPath, role, sort_order: i+1 });
-              if (insErr) console.error('DB insert photo failed', sku, objectPath, insErr);
+                .from('item_photos')
+                .insert({ item_id: itemId, path: objectPath, role, sort_order: i+1 });
+              if (insErr) console.error('DB insert photo failed', title, objectPath, insErr);
             }
           }
         }
       }
+      */
 
-    console.log(`✓ Imported ${sku} (${files.length} photos)`);
+      console.log(`✓ Imported ${title}`); // (${files.length} photos) - removed since images are disabled;
     } catch (e) {
       console.error(`Row ${idx+1} error:`, e.message);
     }

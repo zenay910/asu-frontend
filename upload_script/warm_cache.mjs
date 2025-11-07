@@ -25,7 +25,7 @@ function buildPublic(path, params='') {
 (async function main(){
   const { data, error } = await supabase
     .from('items')
-    .select('sku, photos:item_photos(path, role, sort_order)')
+    .select('id, sku, photos:item_photos(path, role, sort_order)')
     .eq('status','Published')
     .limit(LIMIT);
   if (error) { console.error(error); process.exit(1); }

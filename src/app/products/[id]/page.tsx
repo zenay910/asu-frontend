@@ -4,53 +4,56 @@ export const revalidate = 0;
 import supabase from '@/lib/supabaseClient';
 import Navbar from '@/components/navbar';
 import ProductGallery from '@/components/ProductGallery';
-import { toPublicUrl } from '@/lib/storage';
 import Link from 'next/link';
 
-async function fetchProduct(sku: string) {
-  const cols = `
-    sku,
-    title,
-    brand,
-    price,
-    model_number,
-    condition,
-    status,
-    type,
-    configuration,
-    unit_type,
-    fuel,
-    description_long,
-    dimensions,
-    capacity,
-    color,
-    features,
-    photos:item_photos ( path, role, sort_order )
-  `;
+async function fetchProduct(id: string) {
   const { data, error } = await supabase
-    .from('items')
-    .select(cols)
-    .eq('sku', sku)
+    .from('products')
+    .select(`
+      id,
+      title,
+      brand,
+      price,
+      model_number,
+      condition,
+      status,
+      type,
+      configuration,
+      unit_type,
+      fuel,
+      description_long,
+      dimensions,
+      capacity,
+      color,
+      features,
+      product_images (
+        id,
+        photo_url,
+        product_id
+      )
+    `)
+    .eq('id', id)
     .maybeSingle();
-  if (error) { console.error('Fetch product failed', error); return null; }
+  
+  if (error) { 
+    console.error('Fetch product failed', error); 
+    return null; 
+  }
   if (!data) return null;
-  const sortedPhotos = (data.photos ?? []).sort((a: any, b: any) => {
-    const ac = (a.role ?? '') === 'cover' ? -1 : 0;
-    const bc = (b.role ?? '') === 'cover' ? -1 : 0;
-    if (ac !== bc) return ac - bc;
-    return (a.sort_order ?? 9999) - (b.sort_order ?? 9999);
-  });
-  const gallery = sortedPhotos.map((p: any) => ({
-    path: p.path,
-    url: toPublicUrl(p.path, { width: 1200, quality: 75, format: 'webp' }),
-    thumb: toPublicUrl(p.path, { width: 300, quality: 60, format: 'webp' })
+
+  // Map product_images to gallery format
+  const gallery = (data.product_images ?? []).map((img: any, idx: number) => ({
+    path: img.photo_url, // Use photo_url as path identifier
+    url: img.photo_url,
+    thumb: img.photo_url // Can add transformation later if needed
   }));
+
   return { ...data, gallery };
 }
 
-export default async function ProductDetailBySkuPage({ params }: { params: Promise<{ sku: string }> }) {
-  const { sku } = await params;
-  const product = await fetchProduct(sku);
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const product = await fetchProduct(id);
   if (!product) {
     return (
       <div className="min-h-screen bg-latte">
@@ -68,10 +71,10 @@ export default async function ProductDetailBySkuPage({ params }: { params: Promi
       <div className="container mx-auto px-4 py-6 sm:py-10">
         <Link href="/products" className="text-charcoal text-sm underline inline-block mb-4">&larr; Back to Products</Link>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ProductGallery images={product.gallery} alt={product.model_number || product.sku || 'Appliance'} />
+          <ProductGallery images={product.gallery} alt={product.model_number || 'Appliance'} />
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-charcoal mb-2">
-              {product.title || `${product.brand ? product.brand + ' ' : ''}${product.model_number || product.sku || 'Appliance'}`}
+              {product.title || `${product.brand ? product.brand + ' ' : ''}${product.model_number || 'Appliance'}`}
             </h1>
             <div className="flex items-end gap-4 mb-6">
               <span className="text-3xl font-semibold text-charcoal">{product.price != null ? `$${product.price}` : 'Call for Price'}</span>
