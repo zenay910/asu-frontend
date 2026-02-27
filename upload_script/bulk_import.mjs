@@ -228,7 +228,7 @@ async function main() {
       // ========== IMAGE UPLOAD SECTION COMMENTED OUT ==========
       // TODO: Determine new image organization strategy now that SKU is removed
       // Options: Use item ID, title, or another unique identifier
-      /*
+      
       // Photos for this item (optional)
       const dir = path.join(photosRoot, title); // or use itemId?
       let files = [];
@@ -277,7 +277,6 @@ async function main() {
           }
         }
       }
-      */
 
       console.log(`✓ Imported ${title}`); // (${files.length} photos) - removed since images are disabled;
     } catch (e) {
