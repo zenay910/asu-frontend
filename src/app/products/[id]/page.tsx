@@ -2,6 +2,7 @@ import React from 'react';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import supabase from '@/lib/supabaseClient';
+import { toPublicUrl } from '@/lib/storage';
 import Navbar from '@/components/navbar';
 import ProductGallery from '@/components/ProductGallery';
 import Link from 'next/link';
@@ -42,10 +43,10 @@ async function fetchProduct(id: string) {
   if (!data) return null;
 
   // Map product_images to gallery format
-  const gallery = (data.product_images ?? []).map((img: any, idx: number) => ({
-    path: img.photo_url, // Use photo_url as path identifier
-    url: img.photo_url,
-    thumb: img.photo_url // Can add transformation later if needed
+  const gallery = (data.product_images ?? []).map((img: any) => ({
+    path: img.photo_url,
+    url: toPublicUrl(img.photo_url),
+    thumb: toPublicUrl(img.photo_url, { width: 320, quality: 75, format: 'webp' })
   }));
 
   return { ...data, gallery };

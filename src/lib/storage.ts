@@ -9,9 +9,29 @@ type TransformOpts = {
   format?: 'webp' | 'origin';
 };
 
+function normalizeStoragePath(input: string) {
+  const value = String(input || '').trim();
+  if (!value) return value;
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  const marker = `/object/public/${bucket}/`;
+  const markerIndex = value.indexOf(marker);
+  if (markerIndex >= 0) {
+    return value.slice(markerIndex + marker.length);
+  }
+
+  return value.replace(/^\/+/, '');
+}
+
 export function toPublicUrl(path: string, opts?: TransformOpts) {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  let url = data.publicUrl;
+  const normalized = normalizeStoragePath(path);
+  let url = /^https?:\/\//i.test(normalized)
+    ? normalized
+    : supabase.storage.from(bucket).getPublicUrl(normalized).data.publicUrl;
+
   const params: Record<string, any> = {};
   if (opts?.width) params.width = opts.width;
   if (opts?.height) params.height = opts.height;

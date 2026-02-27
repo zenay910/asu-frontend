@@ -134,7 +134,9 @@ export default function ProductsPage() {
         // Get the first image from product_images array
         const images = row.product_images || [];
         const firstImage = images[0];
-        const image = firstImage?.photo_url || null;
+        const image = firstImage?.photo_url
+          ? toPublicUrl(firstImage.photo_url)
+          : null;
 
         const priceNumber = row.price === null ? null : Number(row.price);
 
