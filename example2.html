@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASU Appliances — Appliances, Parts & Repair · Salt Lake City</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:      #8C1F1F;
+    --red-lt:   #a82424;
+    --red-pale: #f9f0f0;
+    --charcoal: #1e1e1e;
+    --steel:    #3d3d3d;
+    --mid:      #6b6b6b;
+    --smoke:    #f5f5f5;
+    --rule:     #e4e4e4;
+    --white:    #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    color: var(--charcoal);
+    background: var(--charcoal);
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  ::-webkit-scrollbar { display: none; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--charcoal);
+    border-bottom: 2px solid var(--red);
+    padding: 0 48px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+  }
+  .nav-logo span {
+    display: block;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 8px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: #555;
+    margin-top: 3px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #888;
+    text-decoration: none;
+    letter-spacing: .01em;
+    transition: color .15s;
+  }
+  .nav-links a:hover { color: #fff; }
+  .nav-links .nav-cta a {
+    background: var(--red);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .nav-links .nav-cta a:hover { background: var(--red-lt); }
+
+  /* ── HERO — full viewport ── */
+  .hero {
+    min-height: 100vh;
+    background: var(--charcoal);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* big background word */
+  .hero::before {
+    content: 'ASU';
+    position: absolute;
+    right: -40px;
+    bottom: -60px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 420px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.02);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* red glow */
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 80% 60%, rgba(140,31,31,.1) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 2px;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+
+  .hero-h1 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: clamp(48px, 7vw, 88px);
+    letter-spacing: -.025em;
+    line-height: .95;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .hero-h1-light {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 200;
+    font-size: clamp(48px, 7vw, 88px);
+    letter-spacing: -.025em;
+    line-height: .95;
+    color: #444;
+    margin-bottom: 40px;
+  }
+
+  /* ── THE TWO MAIN ACTIONS ── */
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 32px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: none;
+    text-align: left;
+    text-decoration: none;
+    transition: all .15s ease;
+    min-width: 220px;
+  }
+  .action-btn-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -.01em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .action-btn-sub {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .action-primary {
+    background: var(--red);
+  }
+  .action-primary .action-btn-title { color: #fff; }
+  .action-primary .action-btn-sub   { color: rgba(255,255,255,.5); }
+  .action-primary:hover { background: var(--red-lt); }
+
+  .action-secondary {
+    background: rgba(255,255,255,.05);
+    border: 1px solid #333;
+  }
+  .action-secondary .action-btn-title { color: #fff; }
+  .action-secondary .action-btn-sub   { color: #555; }
+  .action-secondary:hover { border-color: #555; background: rgba(255,255,255,.08); }
+
+  /* ── TRUST ROW ── */
+  .hero-trust {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .trust-reviews {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .trust-stars {
+    display: flex;
+    gap: 2px;
+  }
+  .star {
+    width: 14px;
+    height: 14px;
+    fill: #fbbc04;
+  }
+  .trust-score {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: -.01em;
+  }
+  .trust-meta {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #555;
+    line-height: 1.6;
+  }
+  .trust-meta strong {
+    color: #888;
+    font-weight: 400;
+  }
+
+  .trust-divider {
+    width: 1px;
+    height: 32px;
+    background: #333;
+    flex-shrink: 0;
+  }
+
+  .trust-phone {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -.01em;
+    transition: color .15s;
+  }
+  .trust-phone:hover { color: var(--red-lt); }
+  .trust-phone-sub {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  /* ── SERVICES — minimal, text only ── */
+  .services {
+    background: var(--smoke);
+    padding: 40px 48px;
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .service-item {
+    flex: 1;
+    padding: 0 32px;
+    border-right: 1px solid var(--rule);
+  }
+  .service-item:first-child { padding-left: 0; }
+  .service-item:last-child  { border-right: none; }
+
+  .service-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--charcoal);
+    letter-spacing: -.01em;
+    margin-bottom: 4px;
+  }
+  .service-detail {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #111;
+    border-top: 2px solid var(--red);
+    padding: 36px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  .footer-brand {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .footer-sub {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #444;
+  }
+
+  .footer-contact {
+    text-align: center;
+  }
+  .footer-phone {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -.01em;
+    display: block;
+    margin-bottom: 4px;
+    transition: color .15s;
+  }
+  .footer-phone:hover { color: var(--red-lt); }
+  .footer-hours {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #444;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: 13px;
+    color: #555;
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .footer-links a:hover { color: #bbb; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 680px) {
+    nav { padding: 0 20px; }
+    .nav-links { gap: 16px; }
+    .nav-links li:not(.nav-cta) { display: none; }
+
+    .hero { padding: 100px 24px 60px; }
+
+    .hero-actions { flex-direction: column; }
+    .action-btn { min-width: unset; width: 100%; }
+
+    .services { flex-direction: column; gap: 24px; padding: 32px 24px; }
+    .service-item { padding: 0; border-right: none; border-bottom: 1px solid var(--rule); padding-bottom: 20px; }
+    .service-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    footer { flex-direction: column; align-items: flex-start; padding: 28px 24px; }
+    .footer-contact { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">
+    ASU Appliances
+    <span>Salt Lake City, UT</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#">Inventory</a></li>
+    <li><a href="#">Parts</a></li>
+    <li><a href="#">About</a></li>
+    <li class="nav-cta"><a href="#">Book a Repair</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<main class="hero">
+  <div class="hero-inner">
+
+    <div class="hero-eyebrow">Salt Lake City — Local &amp; Trusted</div>
+
+    <div class="hero-h1">We fix it.</div>
+    <div class="hero-h1-light">We sell it.</div>
+
+    <!-- The two actions — big, clear, nothing competing -->
+    <div class="hero-actions">
+      <a href="#" class="action-btn action-primary">
+        <span class="action-btn-title">Book a Repair</span>
+        <span class="action-btn-sub">Same-day estimates available</span>
+      </a>
+      <a href="#" class="action-btn action-secondary">
+        <span class="action-btn-title">Browse Inventory</span>
+        <span class="action-btn-sub">Refurbished · warrantied units</span>
+      </a>
+    </div>
+
+    <!-- Social proof + phone — the only copy that matters -->
+    <div class="hero-trust">
+      <div class="trust-reviews">
+        <div class="trust-stars">
+          <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star" viewBox="0 0 24 24" style="opacity:.55"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <div>
+          <div class="trust-score">4.6</div>
+          <div class="trust-meta"><strong>166 reviews</strong> on Google</div>
+        </div>
+      </div>
+
+      <div class="trust-divider"></div>
+
+      <div>
+        <a href="tel:8018337629" class="trust-phone">(801) 833-7629</a>
+        <div class="trust-phone-sub">Mon–Sat · 8am – 6pm</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── SERVICES — one quiet line, no cards, no selling ── -->
+<div class="services">
+  <div class="service-item">
+    <div class="service-name">Appliance Repair</div>
+    <div class="service-detail">All major brands</div>
+  </div>
+  <div class="service-item">
+    <div class="service-name">Refurbished Units</div>
+    <div class="service-detail">90-day warranty</div>
+  </div>
+  <div class="service-item">
+    <div class="service-name">Parts &amp; Supplies</div>
+    <div class="service-detail">In-stock &amp; special order</div>
+  </div>
+  <div class="service-item">
+    <div class="service-name">Free Estimates</div>
+    <div class="service-detail">Transparent pricing</div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div>
+    <div class="footer-brand">ASU Appliances</div>
+    <div class="footer-sub">Salt Lake City, Utah</div>
+  </div>
+  <div class="footer-contact">
+    <a href="tel:8018337629" class="footer-phone">(801) 833-7629</a>
+    <div class="footer-hours">Mon–Sat &nbsp;·&nbsp; 8:00am – 6:00pm</div>
+  </div>
+  <ul class="footer-links">
+    <li><a href="#">Inventory</a></li>
+    <li><a href="#">Parts</a></li>
+    <li><a href="#">Book a Repair</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>

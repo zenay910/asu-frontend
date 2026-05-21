@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
-import Navbar from "@/components/navbar";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import supabase from "@/lib/supabaseClient";
 import { toPublicUrl } from "@/lib/storage";
+import { StorefrontProductCard } from "@/components/storefront-product-card";
 
 // ---------- Types ----------
 type ProductImage = {
@@ -257,18 +257,51 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-latte">
-      <Navbar />
-      <div className="container mx-auto px-4 py-6 sm:py-8">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-charcoal text-center mb-6 sm:mb-8">
-          Products
-        </h1>
+    <div className="min-h-screen bg-smoke text-charcoal">
+      <header className="border-b-2 border-crimson bg-charcoal px-5 sm:px-12">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
+          <Link
+            href="/"
+            className="font-sans text-[18px] font-bold uppercase tracking-[0.07em] text-white sm:text-[20px]"
+          >
+            ASU Appliances
+          </Link>
+          <Link
+            href="/contact"
+            className="inline-flex items-center rounded-[2px] bg-crimson px-5 py-2.5 font-sans text-[14px] font-medium text-white transition-colors hover:bg-crimson-lt"
+          >
+            Book a Repair
+          </Link>
+        </div>
+      </header>
+
+      <section className="relative overflow-hidden bg-charcoal px-5 pb-10 pt-12 text-white sm:px-12">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_30%,rgba(140,31,31,0.16)_0%,transparent_55%)]" />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-crimson-lt sm:text-[11px]">
+            <span className="h-0.5 w-5 bg-crimson" />
+            Inventory
+          </div>
+          <h1 className="text-[clamp(2.2rem,5.5vw,4rem)] font-bold leading-[0.95] tracking-[-0.03em] text-white">
+            Refurbished Appliances
+            <span className="mt-1 block font-light text-[#9a9a9a]">
+              Ready for your home.
+            </span>
+          </h1>
+          <p className="mt-5 max-w-3xl text-[16px] leading-7 text-[#b5b5b5] sm:text-[17px]">
+            Shop tested units with transparent pricing. Use filters to find the
+            right type, fuel, and brand quickly.
+          </p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-5 py-6 sm:px-12 sm:py-8">
 
         {/* Mobile Filter Toggle */}
-        <div className="lg:hidden mb-4">
+        <div className="mb-4 lg:hidden">
           <button
             onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="w-full bg-charcoal text-latte px-4 py-3 rounded-xs flex items-center justify-center space-x-2 hover:bg-charcoal/80 transition-colors"
+            className="flex w-full items-center justify-center space-x-2 rounded-[2px] bg-charcoal px-4 py-3 text-white transition-colors hover:bg-charcoal/85"
           >
             <svg
               className="w-5 h-5"
@@ -289,11 +322,11 @@ export default function ProductsPage() {
 
         {/* Filter Section */}
         <div
-          className={`bg-white rounded-xs shadow-sm p-4 sm:p-6 mb-6 sm:mb-8 ${
+          className={`mb-6 rounded-[2px] border border-rule bg-white p-4 shadow-sm sm:mb-8 sm:p-6 ${
             showMobileFilters ? "block" : "hidden lg:block"
           }`}
         >
-          <h2 className="text-lg sm:text-xl font-semibold text-charcoal mb-4">
+          <h2 className="mb-4 text-lg font-semibold text-charcoal sm:text-xl">
             Filter Products
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -305,7 +338,7 @@ export default function ProductsPage() {
               <select
                 value={filters.type}
                 onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                className="w-full rounded-[2px] border border-rule bg-white p-2 text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal"
               >
                 <option value="All">All Types</option>
                 {filterOptions.types.map((type) => (
@@ -327,7 +360,7 @@ export default function ProductsPage() {
                   onChange={(e) =>
                     handleFilterChange("configuration", e.target.value)
                   }
-                  className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                  className="w-full rounded-[2px] border border-rule bg-white p-2 text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal"
                 >
                   <option value="All">All Configurations</option>
                   {filterOptions.configurations[
@@ -352,7 +385,7 @@ export default function ProductsPage() {
                   onChange={(e) =>
                     handleFilterChange("unitType", e.target.value)
                   }
-                  className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                  className="w-full rounded-[2px] border border-rule bg-white p-2 text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal"
                 >
                   <option value="All">All Units</option>
                   {filterOptions.unitTypes.map((unitType) => (
@@ -372,7 +405,7 @@ export default function ProductsPage() {
               <select
                 value={filters.brand}
                 onChange={(e) => handleFilterChange("brand", e.target.value)}
-                className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                className="w-full rounded-[2px] border border-rule bg-white p-2 text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal"
               >
                 <option value="All">All Brands</option>
                 {filterOptions.brands.map((brand) => (
@@ -393,7 +426,7 @@ export default function ProductsPage() {
                 <select
                   value={filters.fuel}
                   onChange={(e) => handleFilterChange("fuel", e.target.value)}
-                  className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                  className="w-full rounded-[2px] border border-rule bg-white p-2 text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal"
                 >
                   <option value="All">All Fuel Types</option>
                   {filterOptions.fuels.map((f) => (
@@ -415,7 +448,7 @@ export default function ProductsPage() {
                 onChange={(e) =>
                   handleFilterChange("priceRange", e.target.value)
                 }
-                className="w-full p-2 border border-silver text-charcoal rounded-xs focus:outline-none focus:ring-2 focus:ring-charcoal bg-white"
+                className="w-full rounded-[2px] border border-rule bg-white p-2 text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal"
               >
                 <option value="All">All Prices</option>
                 {filterOptions.priceRanges.map((price) => (
@@ -428,16 +461,16 @@ export default function ProductsPage() {
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end mt-4 space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="mt-4 flex flex-col justify-end space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0">
             <button
               onClick={clearFilters}
-              className="px-4 py-2 text-charcoal border border-charcoal rounded-xs hover:bg-charcoal hover:text-latte transition-colors"
+              className="rounded-[2px] border border-charcoal px-4 py-2 text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
               Clear Filters
             </button>
             <button
               onClick={applyFilters}
-              className="px-4 py-2 bg-charcoal text-latte rounded-xs hover:bg-charcoal/80 transition-colors"
+              className="rounded-[2px] bg-charcoal px-4 py-2 text-white transition-colors hover:bg-charcoal/85"
             >
               Apply Filters
             </button>
@@ -446,7 +479,7 @@ export default function ProductsPage() {
 
         {/* Results Count */}
         <div className="mb-4">
-          <p className="text-charcoal text-sm sm:text-base">
+          <p className="text-sm text-charcoal sm:text-base">
             {loading ? (
               "Loading products…"
             ) : (
@@ -459,57 +492,25 @@ export default function ProductsPage() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {(!loading
             ? filteredProducts
             : (Array.from({ length: 8 }).map((_, i) => ({
                 id: `skeleton-${i}`,
               })) as any)
           ).map((p: ProductCard & { id: string }) => (
-            <Link
+            <StorefrontProductCard
               key={p.id}
-              href={typeof p === "object" ? `/products/${p.id}` : "#"}
-              className="bg-white rounded-xs shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer transform hover:-translate-y-1"
-            >
-              <div className="relative w-full h-64 sm:h-80 bg-silver flex items-center justify-center overflow-hidden">
-                {loading ? (
-                  <div className="animate-pulse w-full h-full bg-gray-200" />
-                ) : p.image ? (
-                  // If you use next/image, add your Supabase domain to next.config.js images.domains
-                  // Otherwise <img> is fine too:
-                  <img
-                    src={p.image as string}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-charcoal text-sm">No image</span>
-                )}
-
-                {!loading && (
-                  <div className="absolute inset-0 bg-charcoal/90 p-4 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                    <div className="text-white">
-                      <h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-2">
-                        {p.name}
-                      </h3>
-                      <div className="space-y-1 mb-3 text-xs sm:text-sm">
-                        <p>Brand: {p.brand}</p>
-                        <p>Type: {p.type}</p>
-                        <p>Condition: {p.condition}</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg sm:text-xl font-bold">
-                          {p.price}
-                        </span>
-                        <span className="bg-white text-charcoal px-3 py-1 rounded-xs text-xs sm:text-sm hover:bg-gray-100 transition-colors">
-                          View Details
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Link>
+              id={p.id}
+              image={loading ? null : p.image}
+              title={loading ? "Loading..." : p.name}
+              price={loading ? "..." : p.price}
+              status={loading ? null : "Published"}
+              brand={loading ? "..." : p.brand}
+              type={loading ? "..." : p.type}
+              condition={loading ? "..." : p.condition}
+              loading={loading}
+            />
           ))}
         </div>
 
@@ -521,7 +522,7 @@ export default function ProductsPage() {
             </p>
             <button
               onClick={clearFilters}
-              className="bg-charcoal text-latte px-6 py-3 rounded-xs hover:bg-charcoal/80 transition-colors"
+              className="rounded-[2px] bg-charcoal px-6 py-3 text-white transition-colors hover:bg-charcoal/85"
             >
               Clear All Filters
             </button>
@@ -531,7 +532,7 @@ export default function ProductsPage() {
         {/* Load More Button (placeholder for future pagination) */}
         {!loading && filteredProducts.length > 0 && (
           <div className="text-center mt-8">
-            <button className="bg-charcoal text-latte px-6 py-3 rounded-xs hover:bg-charcoal/80 transition-colors">
+            <button className="rounded-[2px] bg-charcoal px-6 py-3 text-white transition-colors hover:bg-charcoal/85">
               Load More Products
             </button>
           </div>

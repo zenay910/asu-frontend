@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import Navbar from "@/components/navbar";
 import Link from "next/link";
 
 const servicesData = [
@@ -72,36 +71,61 @@ export default function ServicesPage() {
 	};
 
 	return (
-		<div className="h-screen bg-latte flex flex-col">
-			<Navbar />
-			
-			{/* Page Title */}
-			<div className="container mx-auto px-4 py-6 sm:py-8">
-				<h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-charcoal text-center mb-6 sm:mb-8">
-					Our Services
-				</h1>
-				<p className="text-center text-charcoal/80 max-w-2xl mx-auto mb-8 text-sm sm:text-base">
-					Professional appliance services you can trust. Click on any service to learn more about what we offer.
-				</p>
-			</div>
+		<div className="min-h-screen bg-smoke text-charcoal">
+			<header className="border-b-2 border-crimson bg-charcoal px-5 sm:px-12">
+				<div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
+					<Link
+						href="/"
+						className="font-sans text-[18px] font-bold uppercase tracking-[0.07em] text-white sm:text-[20px]"
+					>
+						ASU Appliances
+					</Link>
+					<Link
+						href="/contact"
+						className="inline-flex items-center rounded-[2px] bg-crimson px-5 py-2.5 font-sans text-[14px] font-medium text-white transition-colors hover:bg-crimson-lt"
+					>
+						Book a Repair
+					</Link>
+				</div>
+			</header>
 
-			{/* Services Grid - Responsive with increased card height */}
-			<div className="container mx-auto px-4 pb-8 flex-1">
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+			<section className="relative overflow-hidden bg-charcoal px-5 pb-10 pt-12 text-white sm:px-12">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_30%,rgba(140,31,31,0.16)_0%,transparent_55%)]" />
+				<div className="relative mx-auto max-w-7xl">
+					<div className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-crimson-lt sm:text-[11px]">
+						<span className="h-0.5 w-5 bg-crimson" />
+						Services
+					</div>
+					<h1 className="text-[clamp(2.2rem,5.5vw,4rem)] font-bold leading-[0.95] tracking-[-0.03em] text-white">
+						Expert Appliance Service
+						<span className="mt-1 block font-light text-[#9a9a9a]">
+							Repair, install, and maintain with confidence.
+						</span>
+					</h1>
+					<p className="mt-5 max-w-3xl text-[16px] leading-7 text-[#b5b5b5] sm:text-[17px]">
+						Choose a service card to view details, what is included, and
+						starting pricing.
+					</p>
+				</div>
+			</section>
+
+			<div className="mx-auto max-w-7xl px-5 py-6 sm:px-12 sm:py-8">
+				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
 					{servicesData.map((service) => {
 						const isSelected = selectedService === service.id;
 						
 						return (
 							<div
 								key={service.id}
-								className={`relative bg-white rounded-xs shadow-sm cursor-pointer transition-all duration-300 overflow-hidden group border-2 h-96 sm:h-[30rem] ${
-									isSelected ? 'border-charcoal shadow-lg' : 'border-transparent hover:shadow-md hover:border-charcoal/20'
+								className={`group relative h-96 cursor-pointer overflow-hidden rounded-[2px] border bg-white shadow-sm transition-all duration-300 sm:h-[30rem] ${
+									isSelected
+										? "border-charcoal shadow-md"
+										: "border-rule hover:-translate-y-1 hover:border-charcoal/20 hover:shadow-md"
 								}`}
 								onClick={() => handleCardClick(service.id)}
 							>
-								{/* Default Card Content */}
 								<div className={`p-6 sm:p-8 h-full flex flex-col justify-center transition-all duration-300 ${
-									isSelected ? 'opacity-0 pointer-events-none' : ''
+									isSelected ? "pointer-events-none opacity-0" : ""
 								}`}>
 									<div className="text-center">
 										<div className="text-4xl sm:text-5xl mb-4">{service.icon}</div>
@@ -110,24 +134,22 @@ export default function ServicesPage() {
 											{service.shortDescription}
 										</p>
 										<p className="text-charcoal font-semibold text-lg">{service.price}</p>
-										<div className="mt-4 text-xs text-charcoal/60 group-hover:text-charcoal/80 transition-colors">
+										<div className="mt-4 text-xs uppercase tracking-[0.08em] text-charcoal/60 transition-colors group-hover:text-charcoal/80">
 											Click to learn more →
 										</div>
 									</div>
 								</div>
 
-								{/* Expanded Content with better spacing */}
-								<div className={`absolute inset-0 bg-charcoal text-latte p-4 sm:p-6 transition-all duration-300 ${
-									isSelected ? 'opacity-100' : 'opacity-0 pointer-events-none'
+								<div className={`absolute inset-0 bg-charcoal p-4 text-white sm:p-6 transition-all duration-300 ${
+									isSelected ? "opacity-100" : "pointer-events-none opacity-0"
 								}`}>
 									<div className="h-full flex flex-col">
-										{/* Close button */}
 										<button 
 											onClick={(e) => {
 												e.stopPropagation();
 												setSelectedService(null);
 											}}
-											className="absolute top-3 right-3 bg-latte text-charcoal px-2 py-1 rounded text-xs hover:bg-latte/90 transition-colors z-10"
+											className="absolute right-3 top-3 z-10 rounded bg-white px-2 py-1 text-xs text-charcoal transition-colors hover:bg-[#f0f0f0]"
 										>
 											✕
 										</button>
@@ -148,7 +170,7 @@ export default function ServicesPage() {
 													<ul className="space-y-1 text-xs sm:text-sm">
 														{service.features.map((feature, index) => (
 															<li key={index} className="flex items-center justify-center">
-																<span className="text-latte mr-2">✓</span>
+																<span className="mr-2 text-[#dddddd]">✓</span>
 																{feature}
 															</li>
 														))}
@@ -157,7 +179,7 @@ export default function ServicesPage() {
 											</div>
 											
                                             <Link href="/contact" className="mt-auto">
-                                                <button className="w-full bg-latte text-charcoal px-4 py-2 rounded-xs font-semibold hover:bg-latte/90 transition-colors text-sm sm:text-base">
+												<button className="w-full rounded-[2px] bg-white px-4 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-[#f0f0f0] sm:text-base">
                                                     Get Quote
                                                 </button>
                                             </Link>
@@ -170,20 +192,24 @@ export default function ServicesPage() {
 				</div>
 			</div>
 
-			{/* Call to Action Section - now at bottom of viewport */}
-			<div className="bg-charcoal text-latte py-12">
-				<div className="container mx-auto px-4 text-center">
-					<h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Get Started?</h2>
-					<p className="text-latte/80 mb-6 max-w-2xl mx-auto">
+			<section className="border-t border-rule bg-charcoal px-5 py-12 text-white sm:px-12">
+				<div className="mx-auto max-w-7xl text-center">
+					<h2 className="mb-4 text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
+						Ready to Get Started?
+					</h2>
+					<p className="mx-auto mb-6 max-w-2xl text-[#c9c9c9]">
 						Contact us today for a free consultation and quote on any of our services.
 					</p>
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
-						<button className="bg-latte text-charcoal px-6 py-3 rounded-xs font-semibold hover:bg-latte/90 transition-colors">
+						<a
+							href="tel:8018337629"
+							className="inline-flex items-center justify-center rounded-[2px] bg-crimson px-6 py-3 font-semibold text-white transition-colors hover:bg-crimson-lt"
+						>
 							Call Now: (801) 833-7629
-						</button>
+						</a>
 					</div>
 				</div>
-			</div>
+			</section>
 		</div>
 	);
 }
