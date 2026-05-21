@@ -1,49 +1,199 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Roboto+Mono:wght@300;400&display=swap");
 
 :root {
-  --background: #f9f5e3;
-  --foreground: #2d2d2d;
+  /* ── Brand colors ── */
+  --crimson:      #8C1F1F;
+  --crimson-dark: #6a1717;
+  --crimson-lt:   #a82424;
+  --crimson-pale: #f9f0f0;
+  --charcoal:     #1e1e1e;
+  --steel:        #3d3d3d;
+  --mid:          #6b6b6b;
+  --smoke:        #f5f5f5;
+  --white:        #ffffff;
+  --rule:         #e4e4e4;
 
-  --color-charcoal: #2d2d2d;
-  --color-navy: #1a1e3f;
-  --color-auburn: #b02030;
-  --color-silver: #9999A1;
-  --color-latte: #F2F4F3;
+  /* ── Semantic aliases ── */
+  --background:   var(--smoke);
+  --foreground:   var(--charcoal);
+  --accent:       var(--crimson);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Colors — available as bg-*, text-*, border-* in Tailwind */
+  --color-background:    var(--background);
+  --color-foreground:    var(--foreground);
+  --color-crimson:       var(--crimson);
+  --color-crimson-dark:  var(--crimson-dark);
+  --color-crimson-lt:    var(--crimson-lt);
+  --color-crimson-pale:  var(--crimson-pale);
+  --color-charcoal:      var(--charcoal);
+  --color-steel:         var(--steel);
+  --color-mid:           var(--mid);
+  --color-smoke:         var(--smoke);
+  --color-rule:          var(--rule);
 
-  --color-charcoal: var(--color-charcoal);
-  --color-navy: var(--color-navy);
-  --color-auburn: var(--color-auburn);
-  --color-silver: var(--color-silver);
-  --color-latte: var(--color-latte);
-
-  --font-sans: var(--font-montserrat), sans-serif;
-  --font-mono: var(--font-montserrat), monospace;
+  /* Fonts */
+  --font-sans: 'Outfit', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base styles ── */
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-::-webkit-scrollbar {
-  display: none;
+/* ── Typography scale ── */
+/* Use these classes directly in your JSX */
+
+.type-display {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 68px);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: .95;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-html {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+.type-heading {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: clamp(24px, 3vw, 40px);
+  letter-spacing: -.02em;
+  line-height: 1.05;
 }
+
+.type-subheading {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: clamp(16px, 2vw, 22px);
+  letter-spacing: -.01em;
+  line-height: 1.2;
+}
+
+.type-body {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.type-label {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.type-caption {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 300;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+/* ── Component primitives ── */
+/* Drop these on any element — no Tailwind class soup needed */
+
+.card {
+  background: var(--smoke);
+  border-radius: 2px;
+  border-left: 3px solid var(--crimson);
+  padding: 28px;
+}
+
+.card-dark {
+  background: var(--charcoal);
+  border-radius: 2px;
+  border-top: 3px solid var(--crimson);
+  padding: 28px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: .02em;
+  padding: 12px 26px;
+  background: var(--crimson);
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.btn-primary:hover { background: var(--crimson-lt); }
+
+.btn-dark {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: .02em;
+  padding: 12px 26px;
+  background: var(--charcoal);
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.btn-dark:hover { background: var(--steel); }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: .02em;
+  padding: 11px 24px;
+  background: transparent;
+  color: var(--charcoal);
+  border: 1.5px solid var(--rule);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color .15s ease;
+}
+.btn-ghost:hover { border-color: var(--charcoal); }
+
+.badge {
+  display: inline-block;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 2px;
+}
+.badge-red   { background: var(--crimson-pale); color: var(--crimson); }
+.badge-dark  { background: #eee; color: var(--steel); }
+.badge-solid { background: var(--crimson); color: #fff; }
+
+.section-eyebrow {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--crimson);
+  margin-bottom: 10px;
+}
+
+.divider-red {
+  width: 28px;
+  height: 2px;
+  background: var(--crimson);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { display: none; }
+html { -ms-overflow-style: none; scrollbar-width: none; }

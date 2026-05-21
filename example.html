@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASU Appliances — Brand System v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:      #8C1F1F;
+    --red-lt:   #a82424;
+    --red-pale: #f9f0f0;
+    --charcoal: #1e1e1e;
+    --steel:    #3d3d3d;
+    --mid:      #6b6b6b;
+    --rule:     #e4e4e4;
+    --smoke:    #f5f5f5;
+    --white:    #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #ebebeb;
+    color: var(--charcoal);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+  }
+
+  .doc-bar {
+    background: var(--charcoal);
+    color: #666;
+    padding: 11px 48px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--red);
+  }
+  .doc-bar strong { color: #fff; }
+
+  section {
+    padding: 64px 48px;
+    border-bottom: 1px solid #d8d8d8;
+    background: var(--white);
+  }
+  section.smoke { background: var(--smoke); }
+  section.dark  { background: var(--charcoal); }
+
+  .sec-label {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .sec-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* ── WORDMARK — all caps title, mono sub ── */
+  .wm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+  }
+  .wm-cell {
+    padding: 44px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .wm-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: .06em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .wm-tag {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .on-white  { background: var(--white); }
+  .on-smoke  { background: var(--smoke); }
+  .on-red    { background: var(--red); }
+  .on-dk     { background: var(--charcoal); }
+  .on-st     { background: var(--steel); }
+  .on-rdk    { background: #6a1717; }
+
+  .on-white .wm-name, .on-smoke .wm-name { color: var(--charcoal); }
+  .on-white .wm-tag,  .on-smoke .wm-tag  { color: var(--red); }
+  .on-red .wm-name, .on-rdk .wm-name     { color: #fff; }
+  .on-red .wm-tag,  .on-rdk .wm-tag      { color: rgba(255,255,255,.5); }
+  .on-dk .wm-name, .on-st .wm-name       { color: #fff; }
+  .on-dk .wm-tag                          { color: var(--red-lt); }
+  .on-st .wm-tag                          { color: #888; }
+
+  /* ── PALETTE ── */
+  .pal-row {
+    display: flex;
+    height: 96px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .pal-sw {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    padding: 12px;
+  }
+  .pal-info {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .08em;
+    line-height: 1.7;
+  }
+
+  /* ── TYPE ── */
+  .type-block {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .type-block:last-child { border-bottom: none; padding-bottom: 0; }
+  .type-meta {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+  .td { font-family:'Outfit',sans-serif; font-weight:700; font-size:68px; letter-spacing:.06em; line-height:.95; color:var(--charcoal); text-transform:uppercase; }
+  .th { font-family:'Outfit',sans-serif; font-weight:600; font-size:36px; letter-spacing:-.01em; color:var(--charcoal); }
+  .tu { font-family:'Roboto Mono',monospace; font-weight:400; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--charcoal); }
+  .tb { font-family:'Outfit',sans-serif; font-weight:300; font-size:16px; line-height:1.7; color:var(--mid); max-width:540px; }
+  .tc { font-family:'Roboto Mono',monospace; font-weight:300; font-size:10px; letter-spacing:.12em; color:#aaa; }
+
+  /* ── COMPONENTS ── */
+  .comp-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+  .comp-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 14px;
+  }
+
+  .btn {
+    display: inline-block;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: .02em;
+    padding: 12px 26px;
+    border: none;
+    cursor: pointer;
+    margin: 0 8px 8px 0;
+    border-radius: 2px;
+  }
+  .btn-primary { background: var(--red); color: #fff; }
+  .btn-dark    { background: var(--charcoal); color: #fff; }
+  .btn-ghost   { background: transparent; color: var(--charcoal); border: 1.5px solid #ccc; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 2px;
+    margin: 0 6px 6px 0;
+  }
+  .badge-red   { background: var(--red-pale); color: var(--red); }
+  .badge-dark  { background: #eee; color: var(--steel); }
+  .badge-solid { background: var(--red); color: #fff; }
+
+  .s-card {
+    background: var(--smoke);
+    border-radius: 2px;
+    padding: 28px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--red);
+  }
+  .s-card-tag {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  .s-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--charcoal);
+    margin-bottom: 6px;
+    letter-spacing: -.01em;
+  }
+  .s-card-body {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--mid);
+  }
+
+  .nav-demo {
+    background: var(--charcoal);
+    padding: 0 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    border-top: 3px solid var(--red);
+    border-radius: 2px;
+  }
+  .nav-brand {
+    padding: 16px 0;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+  }
+  .nav-brand span {
+    display: block;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: #666;
+    margin-top: 3px;
+  }
+  .nav-links-demo {
+    display: flex;
+    list-style: none;
+  }
+  .nav-links-demo li a {
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    height: 100%;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #999;
+    text-decoration: none;
+    border-right: 1px solid #2a2a2a;
+  }
+  .nav-links-demo li:last-child a {
+    background: var(--red);
+    color: #fff;
+    font-weight: 500;
+    border: none;
+    padding: 0 24px;
+  }
+
+  /* ── WEBSITE ── */
+  #website { padding: 0; background: #ebebeb; }
+
+  .site-topbar {
+    background: #1a1a1a;
+    padding: 9px 48px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #555;
+  }
+  .site-topbar strong { color: #bbb; }
+
+  .site-nav {
+    background: var(--charcoal);
+    border-bottom: 3px solid var(--red);
+    padding: 0 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+  }
+  .site-logo {
+    padding: 16px 0;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+  }
+  .site-logo span {
+    display: block;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: #666;
+    margin-top: 3px;
+  }
+  .site-nav-links {
+    display: flex;
+    list-style: none;
+  }
+  .site-nav-links li a {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #999;
+    text-decoration: none;
+    border-right: 1px solid #2a2a2a;
+  }
+  .site-nav-links li:last-child a {
+    background: var(--red);
+    color: #fff;
+    font-weight: 500;
+    border: none;
+    padding: 0 28px;
+  }
+
+  .site-hero {
+    background: var(--charcoal);
+    padding: 88px 48px 80px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 70% 50%, rgba(140,31,31,.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 2px;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+  .site-h1 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 64px;
+    letter-spacing: -.025em;
+    line-height: 1;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .site-h1-sub {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: 64px;
+    letter-spacing: -.02em;
+    line-height: 1;
+    color: #555;
+    margin-bottom: 28px;
+  }
+  .hero-desc {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #777;
+    max-width: 380px;
+    margin-bottom: 36px;
+  }
+  .hero-ctas { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .hero-phone {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    color: #777;
+  }
+
+  .hero-panel {
+    border-left: 1px solid #2e2e2e;
+    padding-left: 64px;
+  }
+  .h-stat { margin-bottom: 28px; }
+  .h-stat-n {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 48px;
+    letter-spacing: -.02em;
+    color: #fff;
+    line-height: 1;
+  }
+  .h-stat-n em { color: var(--red-lt); font-style: normal; font-size: 30px; font-weight: 400; }
+  .h-stat-l {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: 13px;
+    color: #555;
+    margin-top: 3px;
+  }
+  .h-div { width: 28px; height: 2px; background: #2e2e2e; margin: 20px 0; }
+
+  .trust-strip {
+    background: var(--red);
+    padding: 22px 48px;
+    display: flex;
+  }
+  .trust-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-right: 1px solid rgba(255,255,255,.18);
+    padding-right: 32px;
+    margin-right: 32px;
+  }
+  .trust-item:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .trust-icon { font-size: 18px; flex-shrink: 0; }
+  .trust-title { font-family:'Outfit',sans-serif; font-weight:600; font-size:14px; color:#fff; line-height:1; margin-bottom:2px; }
+  .trust-sub { font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.5); }
+
+  .site-section { padding: 72px 48px; background: var(--white); border-bottom: 1px solid var(--rule); }
+  .site-section.smoke-bg { background: var(--smoke); }
+
+  .eyebrow { font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--red); margin-bottom:10px; }
+  .sec-h2 { font-family:'Outfit',sans-serif; font-weight:700; font-size:40px; letter-spacing:-.02em; color:var(--charcoal); line-height:1.05; margin-bottom:6px; }
+  .sec-sub { font-family:'Outfit',sans-serif; font-weight:300; font-size:15px; color:var(--mid); margin-bottom:40px; }
+
+  .cards-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .svc-card {
+    background: var(--smoke);
+    padding: 32px 28px;
+    border-radius: 2px;
+    border-top: 3px solid transparent;
+  }
+  .svc-num { font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:.12em; color:#ccc; margin-bottom:20px; }
+  .svc-title { font-family:'Outfit',sans-serif; font-weight:600; font-size:18px; color:var(--charcoal); margin-bottom:10px; letter-spacing:-.01em; }
+  .svc-desc { font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.65; color:var(--mid); }
+
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+  .why-item { background: var(--white); padding: 28px 28px 28px 32px; border-left: 3px solid var(--red); }
+  .why-title { font-family:'Outfit',sans-serif; font-weight:600; font-size:16px; color:var(--charcoal); margin-bottom:6px; letter-spacing:-.01em; }
+  .why-text { font-family:'Outfit',sans-serif; font-weight:300; font-size:13px; line-height:1.65; color:var(--mid); }
+
+  .cta-band { background: var(--charcoal); padding: 56px 48px; display: flex; justify-content: space-between; align-items: center; gap: 40px; }
+  .cta-eyebrow { font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--red-lt); margin-bottom:10px; }
+  .cta-h { font-family:'Outfit',sans-serif; font-weight:700; font-size:40px; letter-spacing:-.02em; color:#fff; line-height:1.05; margin-bottom:6px; }
+  .cta-sub { font-family:'Outfit',sans-serif; font-weight:300; font-size:15px; color:#666; }
+  .cta-buttons { display: flex; gap: 12px; flex-shrink: 0; }
+  .btn-red { background:var(--red); color:#fff; font-family:'Outfit',sans-serif; font-weight:500; font-size:15px; padding:14px 32px; border:none; cursor:pointer; border-radius:2px; white-space:nowrap; }
+  .btn-outline-w { background:transparent; color:#aaa; font-family:'Outfit',sans-serif; font-weight:400; font-size:15px; padding:14px 28px; border:1.5px solid #333; cursor:pointer; border-radius:2px; white-space:nowrap; }
+
+  .site-footer { background:#141414; padding:56px 48px; display:grid; grid-template-columns:2fr 1fr 1fr; gap:48px; border-top:3px solid var(--red); }
+  .footer-logo { font-family:'Outfit',sans-serif; font-weight:700; font-size:20px; letter-spacing:.06em; text-transform:uppercase; color:#fff; margin-bottom:4px; }
+  .footer-tag { font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:#444; margin-bottom:20px; }
+  .footer-contact { font-family:'Outfit',sans-serif; font-weight:300; font-size:13px; line-height:1.9; color:#555; }
+  .footer-contact strong { color:#aaa; font-weight:500; }
+  .footer-col-title { font-family:'Outfit',sans-serif; font-weight:600; font-size:13px; color:#fff; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid #222; }
+  .footer-links { list-style:none; font-family:'Outfit',sans-serif; font-weight:300; font-size:13px; line-height:2.1; color:#555; }
+  .footer-bottom { background:#0d0d0d; padding:14px 48px; display:flex; justify-content:space-between; font-family:'Roboto Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:#333; }
+
+  @media (max-width: 768px) {
+    .wm-grid, .comp-2col, .cards-3, .why-grid, .site-hero, .site-footer { grid-template-columns: 1fr; }
+    .hero-panel { border-left:none; padding-left:0; border-top:1px solid #2e2e2e; padding-top:32px; }
+    .trust-strip { flex-direction: column; }
+    .cta-band { flex-direction: column; }
+    section, .site-section { padding: 40px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-bar">
+  <strong>ASU Appliances</strong>
+  <span>Brand System v3 — All-caps title, mixed case body</span>
+</div>
+
+<section>
+  <div class="sec-label">01 — Wordmark</div>
+  <div class="wm-grid">
+    <div class="wm-cell on-white"><div class="wm-name">ASU Appliances</div><div class="wm-tag">Appliances &amp; Parts</div></div>
+    <div class="wm-cell on-smoke"><div class="wm-name">ASU Appliances</div><div class="wm-tag">Appliances &amp; Parts</div></div>
+    <div class="wm-cell on-red"><div class="wm-name">ASU Appliances</div><div class="wm-tag">Appliances &amp; Parts</div></div>
+    <div class="wm-cell on-dk"><div class="wm-name">ASU Appliances</div><div class="wm-tag">Appliances &amp; Parts</div></div>
+    <div class="wm-cell on-st"><div class="wm-name">ASU Appliances</div><div class="wm-tag">Appliances &amp; Parts</div></div>
+    <div class="wm-cell on-rdk"><div class="wm-name">ASU Appliances</div><div class="wm-tag">Appliances &amp; Parts</div></div>
+  </div>
+</section>
+
+<section class="smoke">
+  <div class="sec-label">02 — Color Palette</div>
+  <div class="pal-row">
+    <div class="pal-sw" style="background:#8C1F1F;"><div class="pal-info" style="color:#fff;"><strong style="display:block;font-size:10px;">Crimson</strong>#8C1F1F</div></div>
+    <div class="pal-sw" style="background:#6a1717;"><div class="pal-info" style="color:#fff;"><strong style="display:block;font-size:10px;">Deep Red</strong>#6a1717</div></div>
+    <div class="pal-sw" style="background:#f9f0f0;border:1px solid #eee;"><div class="pal-info" style="color:#8C1F1F;"><strong style="display:block;font-size:10px;">Pale Red</strong>#f9f0f0</div></div>
+    <div class="pal-sw" style="background:#1e1e1e;"><div class="pal-info" style="color:#fff;"><strong style="display:block;font-size:10px;">Charcoal</strong>#1e1e1e</div></div>
+    <div class="pal-sw" style="background:#6b6b6b;"><div class="pal-info" style="color:#fff;"><strong style="display:block;font-size:10px;">Mid Grey</strong>#6b6b6b</div></div>
+    <div class="pal-sw" style="background:#f5f5f5;border:1px solid #e4e4e4;"><div class="pal-info" style="color:#aaa;"><strong style="display:block;font-size:10px;color:#888;">Smoke</strong>#f5f5f5</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label">03 — Typography</div>
+  <div class="type-block"><div class="type-meta">Title / Wordmark — Outfit Bold · All caps · Tracked</div><div class="td">ASU Appliances</div></div>
+  <div class="type-block"><div class="type-meta">Heading — Outfit SemiBold · Mixed case</div><div class="th">Appliance Sales &amp; Service</div></div>
+  <div class="type-block"><div class="type-meta">Label — Roboto Mono · Uppercase · Wide tracking</div><div class="tu">Schedule a repair · (801) 833-7629</div></div>
+  <div class="type-block"><div class="type-meta">Body — Outfit Light</div><div class="tb">We repair and sell home appliances with care and precision. Every estimate is honest, every repair is guaranteed.</div></div>
+  <div class="type-block"><div class="type-meta">Caption / Meta — Roboto Mono Light</div><div class="tc">Est. Salt Lake City, UT · Sales · Repair · Parts · Refurbished</div></div>
+</section>
+
+<section class="smoke">
+  <div class="sec-label">04 — UI Components</div>
+  <div class="comp-2col">
+    <div>
+      <div class="comp-title">Buttons</div>
+      <div style="margin-bottom:24px;">
+        <button class="btn btn-primary">Book a Repair</button>
+        <button class="btn btn-dark">View Inventory</button>
+        <button class="btn btn-ghost">Get a Quote</button>
+      </div>
+      <div style="margin-bottom:24px;">
+        <div class="comp-title">Badges</div>
+        <span class="badge badge-red">Certified Repair</span>
+        <span class="badge badge-dark">In Stock</span>
+        <span class="badge badge-solid">Refurbished</span>
+      </div>
+      <div>
+        <div class="comp-title">Navigation</div>
+        <div class="nav-demo">
+          <div class="nav-brand">ASU Appliances <span>Appliances &amp; Parts</span></div>
+          <ul class="nav-links-demo">
+            <li><a href="#">Repairs</a></li>
+            <li><a href="#">Shop</a></li>
+            <li><a href="#">Parts</a></li>
+            <li><a href="#">Call Now</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="comp-title">Service Cards</div>
+      <div class="s-card">
+        <div class="s-card-tag">Repair Service</div>
+        <div class="s-card-title">Washing Machine Repair</div>
+        <div class="s-card-body">Same-day diagnostics. All major brands. Transparent pricing before any work begins.</div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-tag">Refurbished Unit</div>
+        <div class="s-card-title">Samsung Refrigerator — 26 cu. ft.</div>
+        <div class="s-card-body">Fully restored and tested. 90-day in-store warranty. Honestly priced.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="website" style="padding:0;">
+  <div class="sec-label" style="padding:40px 48px 0;background:#ebebeb;">05 — Website Homepage</div>
+  <div class="site-topbar">
+    <span>Salt Lake City, UT &nbsp;·&nbsp; Mon–Sat 8am–6pm</span>
+    <strong>(801) 833-7629 &nbsp;·&nbsp; Same-day estimates available</strong>
+  </div>
+  <nav class="site-nav">
+    <div class="site-logo">ASU Appliances <span>Appliances · Parts · Repair</span></div>
+    <ul class="site-nav-links">
+      <li><a href="#">Repairs</a></li>
+      <li><a href="#">Shop</a></li>
+      <li><a href="#">Parts</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Call Now</a></li>
+    </ul>
+  </nav>
+  <div class="site-hero">
+    <div>
+      <div class="hero-eyebrow">Salt Lake City — Local &amp; Trusted</div>
+      <div class="site-h1">We fix what</div>
+      <div class="site-h1-sub">others replace.</div>
+      <div class="hero-desc">Professional appliance repair, quality refurbished units, and hard-to-find parts. Honest pricing, no surprises.</div>
+      <div class="hero-ctas">
+        <button class="btn-red">Book a Repair</button>
+        <button class="btn-outline-w">Browse Inventory</button>
+      </div>
+      <div style="margin-top:24px;" class="hero-phone">(801) 833-7629</div>
+    </div>
+    <div class="hero-panel">
+      <div class="h-stat"><div class="h-stat-n">15<em>+ yrs</em></div><div class="h-stat-l">Serving Salt Lake City</div></div>
+      <div class="h-div"></div>
+      <div class="h-stat"><div class="h-stat-n">All <em>brands</em></div><div class="h-stat-l">Washer, dryer, fridge, oven &amp; more</div></div>
+      <div class="h-div"></div>
+      <div class="h-stat"><div class="h-stat-n">90<em>-day</em></div><div class="h-stat-l">Warranty on refurbished units</div></div>
+    </div>
+  </div>
+  <div class="trust-strip">
+    <div class="trust-item"><div class="trust-icon">🔧</div><div><div class="trust-title">Appliance Repair</div><div class="trust-sub">All major brands</div></div></div>
+    <div class="trust-item"><div class="trust-icon">♻️</div><div><div class="trust-title">Refurbished Units</div><div class="trust-sub">Tested &amp; warrantied</div></div></div>
+    <div class="trust-item"><div class="trust-icon">⚙️</div><div><div class="trust-title">Parts &amp; Supplies</div><div class="trust-sub">In-stock &amp; special order</div></div></div>
+    <div class="trust-item"><div class="trust-icon">📋</div><div><div class="trust-title">Free Estimates</div><div class="trust-sub">Transparent pricing</div></div></div>
+  </div>
+  <div class="site-section smoke-bg">
+    <div class="eyebrow">What we do</div>
+    <div class="sec-h2">Everything your appliances need.</div>
+    <div class="sec-sub">Repair, refurbish, or replace — we handle it all.</div>
+    <div class="cards-3">
+      <div class="svc-card"><div class="svc-num">01</div><div class="svc-title">Repair Services</div><div class="svc-desc">Washers, dryers, refrigerators, ovens, dishwashers. Fast diagnosis, fixed right the first time.</div></div>
+      <div class="svc-card"><div class="svc-num">02</div><div class="svc-title">Refurbished Appliances</div><div class="svc-desc">Fully restored and tested. Every unit comes with a 90-day warranty and honest pricing.</div></div>
+      <div class="svc-card"><div class="svc-num">03</div><div class="svc-title">Parts &amp; Accessories</div><div class="svc-desc">Hard-to-find parts in stock or sourced fast. We carry what the big-box stores don't.</div></div>
+    </div>
+  </div>
+  <div class="site-section">
+    <div class="eyebrow">Why ASU</div>
+    <div class="sec-h2">The difference you'll notice.</div>
+    <div class="why-grid">
+      <div class="why-item"><div class="why-title">Transparent pricing</div><div class="why-text">Full estimate before any work starts. No hidden fees, no vague quotes.</div></div>
+      <div class="why-item"><div class="why-title">Local &amp; accountable</div><div class="why-text">A Salt Lake City business. Our reputation depends on doing the job right.</div></div>
+      <div class="why-item"><div class="why-title">All major brands</div><div class="why-text">Samsung, LG, Whirlpool, GE, Maytag, Bosch — we work on them all.</div></div>
+      <div class="why-item"><div class="why-title">Parts in stock</div><div class="why-text">Most repairs done same-day or next-day. No waiting weeks for parts.</div></div>
+    </div>
+  </div>
+  <div class="cta-band">
+    <div>
+      <div class="cta-eyebrow">Get started today</div>
+      <div class="cta-h">Ready to book a repair?</div>
+      <div class="cta-sub">Call us or book online — same-day estimates available.</div>
+    </div>
+    <div class="cta-buttons">
+      <button class="btn-red">(801) 833-7629</button>
+      <button class="btn-outline-w">Book Online</button>
+    </div>
+  </div>
+  <footer class="site-footer">
+    <div>
+      <div class="footer-logo">ASU Appliances</div>
+      <div class="footer-tag">Appliances · Parts · Repair — Salt Lake City, UT</div>
+      <div class="footer-contact">
+        <strong>Phone</strong> &nbsp;(801) 833-7629<br>
+        <strong>Hours</strong> &nbsp;Mon–Sat, 8:00am – 6:00pm<br>
+        <strong>Email</strong> &nbsp;info@asuappliances.com<br>
+        Salt Lake City, Utah
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Services</div>
+      <ul class="footer-links"><li>Appliance Repair</li><li>Refurbished Units</li><li>Parts &amp; Supplies</li><li>Free Estimates</li></ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Company</div>
+      <ul class="footer-links"><li>About Us</li><li>Reviews</li><li>Contact</li><li>Book a Repair</li></ul>
+    </div>
+  </footer>
+  <div class="footer-bottom">
+    <span>© 2025 ASU Appliances</span>
+    <span>Salt Lake City, Utah</span>
+  </div>
+</section>
+
+</body>
+</html>
