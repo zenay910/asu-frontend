@@ -7,6 +7,50 @@ import Navbar from '@/components/navbar';
 import ProductGallery from '@/components/ProductGallery';
 import Link from 'next/link';
 
+function formatDimensions(dimensions: unknown) {
+  if (!dimensions) return null;
+
+  if (typeof dimensions === 'string') {
+    return dimensions;
+  }
+
+  if (typeof dimensions === 'object') {
+    const record = dimensions as Record<string, unknown>;
+    const width = record.width_in ?? record.width;
+    const depth = record.depth_in ?? record.depth;
+    const height = record.height_in ?? record.height;
+
+    if (width != null && depth != null && height != null) {
+      return `${width} x ${depth} x ${height}`;
+    }
+
+    return Object.values(record)
+      .filter((value) => value != null && value !== '')
+      .join(' x ');
+  }
+
+  return String(dimensions);
+}
+
+function formatFeatures(features: unknown) {
+  if (!features) return [] as string[];
+
+  if (Array.isArray(features)) {
+    return features
+      .map((feature) => String(feature).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof features === 'string') {
+    return features
+      .split(/,|\n|;/)
+      .map((feature) => feature.trim())
+      .filter(Boolean);
+  }
+
+  return [String(features)];
+}
+
 async function fetchProduct(id: string) {
   const { data, error } = await supabase
     .from('products')
@@ -55,6 +99,7 @@ async function fetchProduct(id: string) {
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await fetchProduct(id);
+  const features = formatFeatures(product?.features);
   if (!product) {
     return (
       <div className="min-h-screen bg-latte">
@@ -82,13 +127,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {product.condition && <span className="px-3 py-1 text-xs bg-charcoal text-white rounded-xs uppercase tracking-wide">{product.condition}</span>}
             </div>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-8">
+              {product.brand && <><dt className="font-medium text-charcoal">Brand</dt><dd className="text-charcoal/80">{product.brand}</dd></>}
               {product.type && <><dt className="font-medium text-charcoal">Type</dt><dd className="text-charcoal/80">{product.type}</dd></>}
-              {product.configuration && <><dt className="font-medium text-charcoal">Configuration</dt><dd className="text-charcoal/80">{product.configuration}</dd></>}
-              {product.unit_type && <><dt className="font-medium text-charcoal">Unit Type</dt><dd className="text-charcoal/80">{product.unit_type}</dd></>}
+              {/* {product.configuration && <><dt className="font-medium text-charcoal">Configuration</dt><dd className="text-charcoal/80">{product.configuration}</dd></>} */}
+              {/* {product.unit_type && <><dt className="font-medium text-charcoal">Unit Type</dt><dd className="text-charcoal/80">{product.unit_type}</dd></>} */}
               {product.fuel && <><dt className="font-medium text-charcoal">Fuel</dt><dd className="text-charcoal/80">{product.fuel}</dd></>}
-              {product.model_number && <><dt className="font-medium text-charcoal">Model Number</dt><dd className="text-charcoal/80">{product.model_number}</dd></>}
+              {/* {product.model_number && <><dt className="font-medium text-charcoal">Model Number</dt><dd className="text-charcoal/80">{product.model_number}</dd></>} */}
               {product.color && <><dt className="font-medium text-charcoal">Color</dt><dd className="text-charcoal/80">{product.color}</dd></>}
               {product.capacity && <><dt className="font-medium text-charcoal">Capacity (in Cu. Ft.)</dt><dd className="text-charcoal/80">{product.capacity}</dd></>}
+              {product.dimensions && <><dt className="font-medium text-charcoal">Dimensions</dt><dd className="text-charcoal/80">{formatDimensions(product.dimensions)}</dd></>}
+              {features.length > 0 && <><dt className="font-medium text-charcoal">Features</dt><dd className="text-charcoal/80"><ul className="list-disc pl-5 space-y-1">{features.map((feature) => <li key={feature}>{feature}</li>)}</ul></dd></>}
             </dl>
             {product.description_long && (
               <div className="prose prose-sm max-w-none mb-8">
