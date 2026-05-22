@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Script from "next/script";
 import type { Metadata } from "next";
 import Navbar from "@/components/navbar";
+import ReviewsWidget from "@/components/reviews-widget";
 
 export const metadata: Metadata = {
   title: "ASU Appliances - Appliances, Parts & Repair · Salt Lake City",
@@ -170,18 +170,9 @@ export default function Home() {
           </div>
 
           <div className="rounded-[2px] border border-[#2f2f2f] bg-[#121212] p-4 sm:p-6">
-            <div
-              id="featurable-367e2998-e895-442a-b6f5-3eeb61f89d71"
-              data-featurable-async=""
-            />
+            <ReviewsWidget widgetId="featurable-367e2998-e895-442a-b6f5-3eeb61f89d71" />
           </div>
         </div>
-
-        <Script
-          src="https://featurable.com/assets/bundle.js"
-          strategy="afterInteractive"
-          charSet="UTF-8"
-        />
       </section>
 
       <footer

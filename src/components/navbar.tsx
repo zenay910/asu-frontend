@@ -10,6 +10,7 @@ type NavbarProps = {
 };
 
 const navItems = [
+  { href: "/", label: "Home" },
   { href: "/products", label: "Inventory" },
   { href: "/services", label: "Services" },
   { href: "/contact", label: "Contact" },
