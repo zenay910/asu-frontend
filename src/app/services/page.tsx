@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import Navbar from "@/components/navbar";
 
 const servicesData = [
 	{
@@ -72,24 +73,9 @@ export default function ServicesPage() {
 
 	return (
 		<div className="min-h-screen bg-smoke text-charcoal">
-			<header className="border-b-2 border-crimson bg-charcoal px-5 sm:px-12">
-				<div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
-					<Link
-						href="/"
-						className="font-sans text-[18px] font-bold uppercase tracking-[0.07em] text-white sm:text-[20px]"
-					>
-						ASU Appliances
-					</Link>
-					<Link
-						href="/contact"
-						className="inline-flex items-center rounded-[2px] bg-crimson px-5 py-2.5 font-sans text-[14px] font-medium text-white transition-colors hover:bg-crimson-lt"
-					>
-						Book a Repair
-					</Link>
-				</div>
-			</header>
+			<Navbar ctaLabel="Book a Repair" ctaHref="/contact" />
 
-			<section className="relative overflow-hidden bg-charcoal px-5 pb-10 pt-12 text-white sm:px-12">
+			<section className="relative overflow-hidden bg-charcoal px-5 pb-10 pt-28 text-white sm:px-12">
 				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_30%,rgba(140,31,31,0.16)_0%,transparent_55%)]" />
 				<div className="relative mx-auto max-w-7xl">
 					<div className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-crimson-lt sm:text-[11px]">

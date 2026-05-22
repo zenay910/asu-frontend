@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import type { Metadata } from "next";
+import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
   title: "ASU Appliances - Appliances, Parts & Repair · Salt Lake City",
@@ -51,51 +52,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <nav className="fixed inset-x-0 top-0 z-50 h-16 border-b-2 border-crimson bg-charcoal px-5 sm:px-12">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between">
-          <Link
-            href="/"
-            className="font-sans text-[18px] font-bold uppercase tracking-[0.07em] text-white sm:text-[20px]"
-          >
-            ASU Appliances
-          </Link>
-
-          <ul className="hidden items-center gap-8 md:flex">
-            <li>
-              <a
-                href="/products"
-                className="font-sans text-[14px] font-normal text-[#a0a0a0] transition-colors hover:text-white"
-              >
-                Inventory
-              </a>
-            </li>
-            <li>
-              <a
-                href="/services"
-                className="font-sans text-[14px] font-normal text-[#a0a0a0] transition-colors hover:text-white"
-              >
-                Services
-              </a>
-            </li>
-            <li>
-              <a
-                href="/contact"
-                className="font-sans text-[14px] font-normal text-[#a0a0a0] transition-colors hover:text-white"
-              >
-                Contact
-              </a>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                className="inline-flex items-center rounded-[2px] bg-crimson px-5 py-2.5 font-sans text-[14px] font-medium text-white transition-colors hover:bg-crimson-lt"
-              >
-                Book a Repair
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </nav>
+      <Navbar />
 
       <section className="relative overflow-hidden px-5 pb-0 pt-28 sm:px-12 sm:pt-32">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_30%,rgba(140,31,31,0.16)_0%,transparent_55%)]" />
