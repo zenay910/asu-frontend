@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -201,21 +202,29 @@ export default function Home() {
         id="parts"
         className="border-t border-rule bg-charcoal px-5 py-10 text-white sm:px-12"
       >
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:gap-8">
           <div>
             <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-crimson-lt sm:text-[10px]">
               Reviews
             </div>
             <h2 className="mt-2 text-[22px] font-bold tracking-[-0.02em] text-white sm:text-[28px]">
-              Google reviews coming soon.
+              Google reviews.
             </h2>
           </div>
-          <p className="max-w-2xl text-[15px] leading-7 text-[#a9a9a9] sm:text-[16px]">
-            This space will show live Google reviews later. For now, it serves
-            as a simple placeholder so the layout stays focused and the future
-            integration has a clear home.
-          </p>
+
+          <div className="rounded-[2px] border border-[#2f2f2f] bg-[#121212] p-4 sm:p-6">
+            <div
+              id="featurable-367e2998-e895-442a-b6f5-3eeb61f89d71"
+              data-featurable-async=""
+            />
+          </div>
         </div>
+
+        <Script
+          src="https://featurable.com/assets/bundle.js"
+          strategy="afterInteractive"
+          charSet="UTF-8"
+        />
       </section>
 
       <footer
