@@ -15,6 +15,7 @@ create table public.products (
   condition text null,
   status text null,
   description_long text null,
+  age numeric null,
   updated_at timestamp with time zone null default now(),
   id uuid not null default gen_random_uuid (),
   constraint products_pkey primary key (id),
