@@ -89,7 +89,7 @@ async function fetchProduct(id: string) {
   const gallery = (data.product_images ?? []).map((img: any) => ({
     path: img.photo_url,
     url: toPublicUrl(img.photo_url),
-    thumb: toPublicUrl(img.photo_url, { width: 320, quality: 75, format: 'webp' })
+    thumb: toPublicUrl(img.photo_url),
   }));
 
   return { ...data, gallery };

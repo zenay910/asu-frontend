@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 type StorefrontProductCardProps = {
@@ -57,7 +58,13 @@ export function StorefrontProductCard({
           {loading ? (
             <div className="h-full w-full animate-pulse bg-charcoal/10" />
           ) : image ? (
-            <img src={image} alt={title} className="h-full w-full object-cover" />
+            <Image
+              src={image}
+              alt={title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover"
+            />
           ) : (
             <span className="text-sm text-mid">No image</span>
           )}

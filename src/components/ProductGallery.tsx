@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import React, { useState, useCallback, KeyboardEvent } from 'react';
 
 export interface GalleryImage {
@@ -59,19 +60,18 @@ export default function ProductGallery({ images, alt, className }: ProductGaller
 
   return (
     <div className={className}>
-      <div className="aspect-[4/3] w-full bg-white rounded-xs shadow-sm overflow-hidden flex items-center justify-center mb-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div className="relative aspect-[4/3] w-full bg-white rounded-xs shadow-sm overflow-hidden flex items-center justify-center mb-4">
         {main ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             key={main.path}
             src={main.url}
             alt={alt}
-            className="w-full h-full object-cover transition-opacity"
-            decoding="async"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover transition-opacity"
+            priority
             onError={() => {
               markBroken(main.path);
-              // shift index to 0 after marking broken
               setIndex(0);
             }}
           />
@@ -82,7 +82,6 @@ export default function ProductGallery({ images, alt, className }: ProductGaller
       {validImages.length > 1 && (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
     {validImages.map((g, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
             <button
               key={g.path}
               type="button"
@@ -93,13 +92,14 @@ export default function ProductGallery({ images, alt, className }: ProductGaller
                 i === safeIndex ? 'border-charcoal ring-1 ring-charcoal' : 'border-silver'
               }`}
             >
-              <img
-                src={g.thumb}
+              <Image
+                src={g.url}
                 alt="thumbnail"
-                loading="lazy"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-      markBroken(g.path);
+                fill
+                sizes="80px"
+                className="object-cover"
+                onError={() => {
+                  markBroken(g.path);
                 }}
               />
               {i === safeIndex && <span className="absolute inset-0 ring-2 ring-inset ring-charcoal pointer-events-none" />}
